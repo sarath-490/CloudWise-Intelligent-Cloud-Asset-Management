@@ -1,0 +1,106 @@
+.file-card {
+  background: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.file-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.file-card-list {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.file-card-list .file-card-header {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.file-card-list .file-category {
+  margin-top: 0;
+  margin-right: auto;
+}
+
+.file-card-list .file-actions {
+  margin-top: 0;
+}
+
+.file-card-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.file-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  flex-shrink: 0;
+  color: var(--primary-color);
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.file-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.file-size,
+.file-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-category {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
