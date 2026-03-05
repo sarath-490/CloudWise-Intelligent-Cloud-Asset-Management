@@ -5,9 +5,8 @@ import com.cloudfileorganizer.backend.repository.UserRepository;
 import com.cloudfileorganizer.backend.service.AiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,26 +21,33 @@ public class AiController {
     @Autowired
     private UserRepository userRepository;
 
+    public static class ChatRequest {
+        private String query;
+        public String getQuery() { return query; }
+        public void setQuery(String query) { this.query = query; }
+    }
+
     @PostMapping("/chat")
-    public ResponseEntity<Map<String, String>> chat(@RequestBody Map<String, String> request) {
-        String query = request.get("query");
-        
-        // Get user from SecurityContext (the JWT filter sets the User entity as the principal)
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
-        String response = aiService.chatWithAgent(query, user);
-        
-        Map<String, String> result = new HashMap<>();
-        result.put("response", response);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<?> chat(@RequestBody ChatRequest request, Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        String response = aiService.chatWithAgent(request.getQuery(), user);
+        return ResponseEntity.ok(Map.of("response", response));
     }
 
     @PostMapping("/analyze/{fileId}")
-    public ResponseEntity<Map<String, String>> analyze(@PathVariable String fileId) {
-        aiService.analyzeFile(fileId);
-        
-        Map<String, String> result = new HashMap<>();
-        result.put("message", "Analysis triggered for file ID: " + fileId);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Map<String, Object>> analyze(@PathVariable String fileId) {
+        try {
+            aiService.analyzeFile(fileId);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "Analysis complete for file ID: " + fileId);
+            result.put("success", true);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "Analysis failed: " + e.getMessage());
+            result.put("success", false);
+            return ResponseEntity.status(500).body(result);
+        }
     }
 }

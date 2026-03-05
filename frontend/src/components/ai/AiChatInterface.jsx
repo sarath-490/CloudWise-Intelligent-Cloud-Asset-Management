@@ -47,37 +47,33 @@ const AiChatInterface = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-10 right-10 bg-indigo-600 text-white w-16 h-16 rounded-[24px] shadow-2xl shadow-indigo-500/40 hover:bg-indigo-700 hover:-translate-y-2 transition-all z-50 flex items-center justify-center group active:scale-95"
+                className="fixed bottom-10 right-10 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all z-50 flex items-center justify-center group active:scale-95"
             >
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full animate-pulse"></div>
-                <Sparkles size={28} className="text-white group-hover:scale-110 transition-transform" />
+                <Sparkles size={24} className="text-white group-hover:scale-110 transition-transform" />
             </button>
         );
     }
 
     return (
-        <div className="fixed bottom-10 right-10 w-[420px] max-w-[calc(100vw-2rem)] h-[650px] max-h-[calc(100vh-6rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.4)] z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-10 duration-300">
+        <div className="fixed bottom-10 right-10 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-10 duration-200">
             {/* Header */}
-            <div className="bg-indigo-600 p-6 flex justify-between items-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-
-                <div className="flex items-center gap-4 relative z-10">
-                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-inner">
-                        <Brain size={24} className="animate-pulse" />
+            <div className="bg-indigo-600 p-4 flex justify-between items-center relative overflow-hidden">
+                <div className="flex items-center gap-3 relative z-10">
+                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-sm">
+                        <Bot size={20} />
                     </div>
                     <div>
-                        <h3 className="font-black text-white text-lg tracking-tight">AI Assistant</h3>
-                        <p className="text-[10px] text-indigo-100 font-extrabold uppercase tracking-widest flex items-center gap-1.5 opacity-80">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <h3 className="font-bold text-white text-base tracking-tight">AI Assistant</h3>
+                        <p className="text-xs text-indigo-100 font-medium">
                             Online
                         </p>
                     </div>
                 </div>
                 <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all relative z-10"
+                    className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all relative z-10"
                 >
-                    <X size={20} />
+                    <X size={18} />
                 </button>
             </div>
 
@@ -91,7 +87,7 @@ const AiChatInterface = () => {
                                 : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'}`}>
                                 {m.role === 'user' ? <User size={14} /> : <Bot size={14} />}
                             </div>
-                            <div className={`p-4 rounded-[24px] text-sm leading-relaxed font-medium shadow-sm ${m.role === 'user'
+                            <div className={`p-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm ${m.role === 'user'
                                 ? 'bg-indigo-600 text-white rounded-tr-sm'
                                 : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-sm'
                                 }`}>
@@ -118,26 +114,35 @@ const AiChatInterface = () => {
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSendMessage} className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 relative">
-                <div className="flex gap-3 relative items-center">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 relative">
+                <div className="flex justify-start gap-2 mb-3 overflow-x-auto pb-1 custom-scrollbar scrollbar-hide">
+                    {['Summarize my documents', 'Find files about code', 'What did I upload recently?'].map((suggestion, idx) => (
+                        <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setQuery(suggestion)}
+                            className="whitespace-nowrap px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                        >
+                            {suggestion}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex gap-2 relative items-center">
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Ask me anything about your files..."
-                        className="flex-1 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-all font-bold text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-medium"
+                        placeholder="Ask about your files..."
+                        className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-all text-slate-900 dark:text-white"
                     />
                     <button
                         type="submit"
                         disabled={loading || !query.trim()}
-                        className="bg-indigo-600 text-white w-14 h-14 rounded-2xl flex items-center justify-center hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-all flex-shrink-0 shadow-lg shadow-indigo-500/20 active:scale-95"
+                        className="bg-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-indigo-700 disabled:opacity-50 transition-all flex-shrink-0"
                     >
-                        <Send size={20} className={query.trim() ? "translate-x-0.5 -translate-y-0.5 transition-transform" : ""} />
+                        <Send size={16} className={query.trim() ? "translate-x-0.5 -translate-y-0.5" : ""} />
                     </button>
                 </div>
-                <p className="text-[10px] text-center mt-4 font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600">
-                    Powered by AI
-                </p>
             </form>
         </div>
     );

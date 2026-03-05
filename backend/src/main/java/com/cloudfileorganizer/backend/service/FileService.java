@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.transaction.annotation.Transactional;
+import com.cloudfileorganizer.backend.model.AiAnalysisStatus;
+
 @Service
 public class FileService {
 
@@ -27,6 +30,7 @@ public class FileService {
     /**
      * Upload file to S3 and save metadata
      */
+    @Transactional
     public FileMetadata uploadFile(MultipartFile file, User user, String category) throws IOException {
         // Validate file
         if (file.isEmpty()) {
@@ -58,12 +62,13 @@ public class FileService {
         fileMetadata.setCategory(normalizedCategory);
         fileMetadata.setUploadDate(LocalDateTime.now());
         fileMetadata.setUser(user);
+        fileMetadata.setAiAnalysisStatus(AiAnalysisStatus.PENDING);
 
         // Save metadata to database
         FileMetadata savedFile = fileRepository.save(fileMetadata);
 
         // Trigger AI analysis asynchronously
-        new Thread(() -> aiService.analyzeFile(savedFile.getId())).start();
+        aiService.analyzeFile(savedFile.getId());
 
         return savedFile;
     }
@@ -87,6 +92,23 @@ public class FileService {
      */
     public List<FileMetadata> getFilesByCategory(User user, String category) {
         return fileRepository.findByUserAndCategory(user, category);
+    }
+
+    /**
+     * Get files by AI category (user-restricted)
+     */
+    /**
+     * Get files by AI category (user-restricted)
+     */
+    public List<FileMetadata> getFilesByAiCategory(User user, String aiCategory) {
+        return fileRepository.findByUserAndAiCategory(user, aiCategory);
+    }
+
+    /**
+     * Get files by combined category and AI category (user-restricted)
+     */
+    public List<FileMetadata> getFilesByCombinedCategory(User user, String category, String aiCategory) {
+        return fileRepository.findByUserAndCategoryAndAiCategory(user, category, aiCategory);
     }
 
     /**
@@ -143,5 +165,49 @@ public class FileService {
             if (lower.endsWith(".pptx") || lower.endsWith(".ppt")) return "Presentations";
         }
         return "Others";
+    }
+
+    public List<Object[]> getCategoryCounts(User user) {
+        return fileRepository.countFilesByCategory(user);
+    }
+
+    public List<Object[]> getAiCategoryCounts(User user) {
+        return fileRepository.countFilesByAiCategory(user);
+    }
+
+    public FileMetadata updateCategory(String id, User user, String newCategory) {
+        FileMetadata file = fileRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("File not found or access denied"));
+        file.setCategory(normalizeCategory(newCategory));
+        return fileRepository.save(file);
+    }
+
+    public List<FileMetadata> searchFiles(User user, String query) {
+        return fileRepository.searchFiles(user, query);
+    }
+
+    public List<FileMetadata> getFilesFiltered(User user, String category, String aiCategory) {
+        if (category != null && !category.isEmpty() && aiCategory != null && !aiCategory.isEmpty()) {
+            return getFilesByCombinedCategory(user, category, aiCategory);
+        } else if (category != null && !category.isEmpty()) {
+            return getFilesByCategory(user, category);
+        } else if (aiCategory != null && !aiCategory.isEmpty()) {
+            return getFilesByAiCategory(user, aiCategory);
+        } else {
+            return getFilesByUser(user);
+        }
+    }
+
+    public void reanalyzeFile(String id, User user) {
+        FileMetadata file = fileRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("File not found or access denied"));
+        aiService.analyzeFile(file.getId());
+    }
+
+    @Transactional
+    public void deleteFilesBulk(List<String> ids, User user) throws IOException {
+        for (String id : ids) {
+            deleteFile(id, user);
+        }
     }
 }

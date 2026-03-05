@@ -77,11 +77,11 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200/60 rounded-[32px] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-[32px] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
       <div
         className={`border-4 border-dashed rounded-[32px] p-20 text-center transition-all duration-700 cursor-pointer relative overflow-hidden group ${isDragging
-          ? 'border-indigo-500 bg-indigo-50/50 scale-[1.01]'
-          : 'border-slate-100 bg-slate-50/30 hover:border-indigo-200 hover:bg-white hover:shadow-2xl hover:shadow-indigo-50/50'
+          ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/40 scale-[1.01]'
+          : 'border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-indigo-50/50 dark:hover:shadow-indigo-900/10'
           }`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
@@ -91,7 +91,7 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
       >
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-        <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-white border border-slate-100 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 relative z-10">
+        <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 relative z-10">
           {isDragging ? (
             <Cloud size={48} className="text-indigo-600 animate-bounce" />
           ) : (
@@ -100,14 +100,14 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
         </div>
 
         <div className="relative z-10">
-          <div className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
+          <div className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
             {isDragging ? 'Drop Files Here' : 'Drop Files Here'}
           </div>
-          <div className="text-[15px] text-slate-500 mb-6 font-bold uppercase tracking-widest">or click to choose files</div>
+          <div className="text-[15px] text-slate-500 dark:text-slate-400 mb-6 font-bold uppercase tracking-widest text-shadow-sm">or click to choose files</div>
           <div className="flex items-center justify-center gap-4">
-            <div className="h-px w-8 bg-slate-200"></div>
-            <div className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Universal Support • 100MB Max</div>
-            <div className="h-px w-8 bg-slate-200"></div>
+            <div className="h-px w-8 bg-slate-200 dark:bg-slate-700"></div>
+            <div className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Universal Support • 100MB Max</div>
+            <div className="h-px w-8 bg-slate-200 dark:bg-slate-700"></div>
           </div>
         </div>
 
@@ -122,15 +122,15 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
       </div>
 
       {selectedFiles.length > 0 && (
-        <div ref={fileListRef} className="mt-12 pt-10 border-t border-slate-100">
+        <div ref={fileListRef} className="mt-12 pt-10 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
-              <span className="text-[13px] font-black text-slate-900 uppercase tracking-widest">
+              <span className="text-[13px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
                 Selected Files ({selectedFiles.length})
               </span>
             </div>
-            <Button variant="primary" size="medium" onClick={handleUpload} className="px-8 h-12 rounded-xl font-black text-[13px] uppercase tracking-wider shadow-lg shadow-indigo-100">
+            <Button variant="primary" size="medium" onClick={handleUpload} className="px-8 h-12 rounded-xl font-black text-[13px] uppercase tracking-wider shadow-lg shadow-indigo-100 dark:shadow-none">
               <Upload size={18} className="mr-2" />
               Upload Files
             </Button>
@@ -139,15 +139,15 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
             {selectedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-2xl hover:border-indigo-300 hover:shadow-xl hover:shadow-slate-100 transition-all group"
+                className="flex items-center justify-between p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-xl hover:shadow-slate-100 dark:hover:shadow-indigo-900/10 transition-all group"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 transition-colors duration-500">
-                    <File size={24} className="text-slate-400 group-hover:text-white transition-colors" />
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-600 transition-colors duration-500">
+                    <File size={24} className="text-slate-400 dark:text-slate-500 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[15px] font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{file.name}</div>
-                    <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{formatFileSize(file.size)}</div>
+                    <div className="text-[15px] font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{file.name}</div>
+                    <div className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{formatFileSize(file.size)}</div>
                   </div>
                 </div>
                 <button

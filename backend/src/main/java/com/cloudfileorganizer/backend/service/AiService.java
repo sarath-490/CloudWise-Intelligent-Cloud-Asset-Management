@@ -12,8 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.cloudfileorganizer.backend.model.AiAnalysisStatus;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -52,13 +54,17 @@ public class AiService {
     }
 
     /**
-     * Analyze file (categorize and summarize)
+     * Analyze file asynchronously (categorize and summarize)
      */
+    @Async("taskExecutor")
     public void analyzeFile(String fileId) {
         FileMetadata file = fileRepository.findById(fileId).orElse(null);
         if (file == null) return;
 
         try {
+            file.setAiAnalysisStatus(AiAnalysisStatus.IN_PROGRESS);
+            fileRepository.save(file);
+
             logger.info("Analyzing file: {}", file.getName());
 
             String prompt = String.format(
@@ -94,9 +100,8 @@ public class AiService {
             file.setAiSummary(summary);
             file.setAiTags(tags);
             file.setAiConfidence(confidence);
-
-            // Also update the base category with AI's determination
-            file.setCategory(category);
+            file.setAiAnalysisStatus(AiAnalysisStatus.COMPLETED);
+            file.setAiAnalysisCompletedAt(LocalDateTime.now());
 
             fileRepository.save(file);
             logger.info("File analysis complete and saved for: {}. Category: {}", file.getName(), category);
@@ -104,6 +109,9 @@ public class AiService {
         } catch (Exception e) {
             logger.error("CRITICAL: Failed to analyze file {}. Error: {}. Stacktrace follows.", fileId, e.getMessage());
             e.printStackTrace();
+            file.setAiAnalysisStatus(AiAnalysisStatus.FAILED);
+            file.setAiAnalysisError(e.getMessage());
+            fileRepository.save(file);
         }
     }
 

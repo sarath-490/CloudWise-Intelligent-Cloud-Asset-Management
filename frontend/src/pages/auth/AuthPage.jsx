@@ -153,29 +153,29 @@ const AuthPage = () => {
                         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-700 opacity-50 blur-3xl"></div>
 
                         <div className="relative z-10 max-w-md mx-auto xl:mr-32 w-full">
-                            <div className="flex items-center gap-3 mb-10 cursor-pointer justify-end" onClick={() => navigate('/')}>
-                                <span className="text-3xl font-bold tracking-tight">CloudWise</span>
+                            <div className="flex items-center gap-3 mb-10 cursor-pointer" onClick={() => navigate('/')}>
                                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
                                     <Cloud className="w-7 h-7" />
                                 </div>
+                                <span className="text-3xl font-bold tracking-tight">CloudWise</span>
                             </div>
-                            <h1 className="text-4xl font-bold mb-6 leading-tight text-right">Start organizing <br />your digital life.</h1>
-                            <p className="text-lg text-blue-100 mb-10 leading-relaxed text-right">Join thousands of users managing their files securely in the intelligent cloud.</p>
+                            <h1 className="text-4xl font-bold mb-6 leading-tight">Start organizing <br />your digital life.</h1>
+                            <p className="text-lg text-blue-100 mb-10 leading-relaxed">Join thousands of users managing their files securely in the intelligent cloud.</p>
                             <div className="space-y-6 w-full">
-                                <div className="flex gap-4 items-start flex-row-reverse">
+                                <div className="flex gap-4 items-start">
                                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-1">
                                         <CheckCircle className="text-white w-5 h-5" />
                                     </div>
-                                    <div className="text-right">
+                                    <div>
                                         <h3 className="font-semibold text-lg mb-1">AI-Powered Organization</h3>
                                         <p className="text-sm text-blue-100/80">Automatically categorize and tag all your uploaded documents.</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-4 items-start flex-row-reverse">
+                                <div className="flex gap-4 items-start">
                                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-1">
                                         <Zap className="text-white w-5 h-5" />
                                     </div>
-                                    <div className="text-right">
+                                    <div>
                                         <h3 className="font-semibold text-lg mb-1">Instant Search</h3>
                                         <p className="text-sm text-blue-100/80">Find any file in milliseconds using powerful filters.</p>
                                     </div>
@@ -303,8 +303,8 @@ const AuthPage = () => {
                                         </div>
                                     )}
 
-                                    <form className="space-y-4" onSubmit={handleSubmit}>
-                                        <div className="space-y-1.5">
+                                    <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
+                                        <div className="space-y-1.5 col-span-1 md:col-span-2">
                                             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
                                             <div className="relative group">
                                                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -320,7 +320,7 @@ const AuthPage = () => {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-1.5">
+                                        <div className="space-y-1.5 col-span-1 md:col-span-2">
                                             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
                                             <div className="relative group">
                                                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
@@ -336,36 +336,34 @@ const AuthPage = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                                                <div className="relative group">
-                                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                                                    <input
-                                                        type="password"
-                                                        name="password"
-                                                        placeholder="••••••••"
-                                                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-900 dark:text-white"
-                                                        value={formData.password}
-                                                        onChange={handleChange}
-                                                        required
-                                                    />
-                                                </div>
+                                        <div className="space-y-1.5 col-span-1 md:col-span-1">
+                                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+                                            <div className="relative group">
+                                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                                                <input
+                                                    type="password"
+                                                    name="password"
+                                                    placeholder="••••••••"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-900 dark:text-white"
+                                                    value={formData.password}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
                                             </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm</label>
-                                                <div className="relative group">
-                                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                                                    <input
-                                                        type="password"
-                                                        name="confirmPassword"
-                                                        placeholder="••••••••"
-                                                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-900 dark:text-white"
-                                                        value={formData.confirmPassword}
-                                                        onChange={handleChange}
-                                                        required
-                                                    />
-                                                </div>
+                                        </div>
+                                        <div className="space-y-1.5 col-span-1 md:col-span-1">
+                                            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm</label>
+                                            <div className="relative group">
+                                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                                                <input
+                                                    type="password"
+                                                    name="confirmPassword"
+                                                    placeholder="••••••••"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-900 dark:text-white"
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
                                             </div>
                                         </div>
 
@@ -385,12 +383,12 @@ const AuthPage = () => {
                                             </div>
                                         )}
 
-                                        <Button type="submit" variant="primary" loading={loading} className="w-full py-3.5 text-base font-semibold bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/30 transition-all mt-6">
+                                        <Button type="submit" variant="primary" loading={loading} className="col-span-1 md:col-span-2 w-full py-3.5 text-base font-semibold bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/30 transition-all mt-6">
                                             Create Account
                                         </Button>
                                     </form>
 
-                                    <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                                    <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
                                         Already have an account?{' '}
                                         <button onClick={handleToggle} type="button" className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline underline-offset-4">
                                             Sign in
@@ -414,8 +412,8 @@ const AuthPage = () => {
             animation: shake 0.5s ease-in-out;
           }
         `}} />
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -44,6 +44,14 @@ public class FileMetadata {
 
     private Double aiConfidence;
 
+    @Enumerated(EnumType.STRING)
+    private AiAnalysisStatus aiAnalysisStatus; // PENDING, IN_PROGRESS, COMPLETED, FAILED
+
+    private LocalDateTime aiAnalysisCompletedAt;
+    
+    @Column(columnDefinition = "TEXT")
+    private String aiAnalysisError;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -164,5 +172,29 @@ public class FileMetadata {
 
     public void setAiConfidence(Double aiConfidence) {
         this.aiConfidence = aiConfidence;
+    }
+
+    public AiAnalysisStatus getAiAnalysisStatus() {
+        return aiAnalysisStatus;
+    }
+
+    public void setAiAnalysisStatus(AiAnalysisStatus aiAnalysisStatus) {
+        this.aiAnalysisStatus = aiAnalysisStatus;
+    }
+
+    public LocalDateTime getAiAnalysisCompletedAt() {
+        return aiAnalysisCompletedAt;
+    }
+
+    public void setAiAnalysisCompletedAt(LocalDateTime aiAnalysisCompletedAt) {
+        this.aiAnalysisCompletedAt = aiAnalysisCompletedAt;
+    }
+
+    public String getAiAnalysisError() {
+        return aiAnalysisError;
+    }
+
+    public void setAiAnalysisError(String aiAnalysisError) {
+        this.aiAnalysisError = aiAnalysisError;
     }
 }

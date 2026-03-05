@@ -81,17 +81,12 @@ public class FileController {
 
     @GetMapping
     public ResponseEntity<?> getFiles(
-            @RequestParam(value = "category", required = false) String category) {
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "aiCategory", required = false) String aiCategory) {
         
         try {
             User user = getCurrentUser();
-            List<FileMetadata> files;
-            
-            if (category != null && !category.isEmpty()) {
-                files = fileService.getFilesByCategory(user, category);
-            } else {
-                files = fileService.getFilesByUser(user);
-            }
+            List<FileMetadata> files = fileService.getFilesFiltered(user, category, aiCategory);
 
             List<Map<String, Object>> fileList = files.stream().map(file -> {
                 Map<String, Object> fileMap = new HashMap<>();
@@ -113,6 +108,69 @@ public class FileController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", "Failed to retrieve files: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchFiles(@RequestParam("q") String query) {
+        try {
+            User user = getCurrentUser();
+            List<FileMetadata> files = fileService.searchFiles(user, query);
+            List<Map<String, Object>> fileList = files.stream().map(file -> {
+                Map<String, Object> fileMap = new HashMap<>();
+                fileMap.put("id", file.getId());
+                fileMap.put("name", file.getName());
+                fileMap.put("originalName", file.getOriginalName());
+                fileMap.put("size", file.getSize());
+                fileMap.put("category", file.getCategory());
+                fileMap.put("uploadDate", file.getUploadDate());
+                fileMap.put("mimeType", file.getMimeType());
+                fileMap.put("aiCategory", file.getAiCategory());
+                fileMap.put("aiSummary", file.getAiSummary());
+                fileMap.put("aiTags", file.getAiTags());
+                fileMap.put("aiConfidence", file.getAiConfidence());
+                return fileMap;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(fileList);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Search failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<?> getCategories() {
+        try {
+            User user = getCurrentUser();
+            
+            // Standard categories
+            List<Object[]> categoryCounts = fileService.getCategoryCounts(user);
+            List<Map<String, Object>> standardCategories = categoryCounts.stream().map(obj -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("category", obj[0]);
+                map.put("count", obj[1]);
+                return map;
+            }).collect(Collectors.toList());
+
+            // AI categories
+            List<Object[]> aiCategoryCounts = fileService.getAiCategoryCounts(user);
+            List<Map<String, Object>> aiCategories = aiCategoryCounts.stream().map(obj -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("category", obj[0]);
+                map.put("count", obj[1]);
+                return map;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> combinedResponse = new HashMap<>();
+            combinedResponse.put("standard", standardCategories);
+            combinedResponse.put("ai", aiCategories);
+
+            return ResponseEntity.ok(combinedResponse);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Failed to get categories: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
@@ -169,10 +227,16 @@ public class FileController {
                     ? fileMetadata.getOriginalName() 
                     : fileMetadata.getName();
 
+            // Use RFC 5987 encoding for proper Unicode/special character support
+            String encodedFileName = java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                    .replace("+", "%20");
+
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, 
+                            "attachment; filename=\"" + fileName + "\"; filename*=UTF-8''" + encodedFileName)
                     .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(fileMetadata.getSize()))
+                    .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                     .body(resource);
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();
@@ -206,6 +270,73 @@ public class FileController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", "Delete failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<?> deleteFilesBulk(@RequestBody Map<String, List<String>> request) {
+        try {
+            User user = getCurrentUser();
+            List<String> ids = request.get("ids");
+            if (ids == null || ids.isEmpty()) {
+                throw new IllegalArgumentException("No IDs provided");
+            }
+            fileService.deleteFilesBulk(ids, user);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Files deleted successfully");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Bulk delete failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PutMapping("/{id}/category")
+    public ResponseEntity<?> updateCategory(@PathVariable String id, @RequestBody Map<String, String> request) {
+        try {
+            User user = getCurrentUser();
+            String newCategory = request.get("category");
+            if (newCategory == null || newCategory.trim().isEmpty()) {
+                throw new IllegalArgumentException("Category cannot be empty");
+            }
+            FileMetadata updatedFile = fileService.updateCategory(id, user, newCategory);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", updatedFile.getId());
+            response.put("category", updatedFile.getCategory());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Category update failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/{id}/reanalyze")
+    public ResponseEntity<?> reanalyzeFile(@PathVariable String id) {
+        try {
+            User user = getCurrentUser();
+            fileService.reanalyzeFile(id, user);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Analysis triggered successfully");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Failed to trigger analysis: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

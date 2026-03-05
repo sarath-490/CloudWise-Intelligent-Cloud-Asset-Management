@@ -56,7 +56,7 @@ const FileDetails = () => {
   const handleDownload = async () => {
     try {
       setDownloading(true);
-      await fileService.downloadFile(id);
+      await fileService.downloadFile(id, file.originalName || file.name);
     } catch (error) {
       console.error('Download error:', error);
     } finally {
@@ -79,10 +79,9 @@ const FileDetails = () => {
   const handleReanalyze = async () => {
     try {
       setAnalyzing(true);
-      const result = await aiService.analyzeFile(id);
-      if (result.success) {
-        fetchFileDetails();
-      }
+      await aiService.analyzeFile(id);
+      // Always re-fetch since the backend now performs analysis synchronously
+      await fetchFileDetails();
     } catch (error) {
       console.error('Analysis error:', error);
     } finally {
@@ -130,7 +129,7 @@ const FileDetails = () => {
         {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* File Header Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="w-20 h-20 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0 border border-blue-100 dark:border-blue-800/30">
                 <FileText size={36} />
@@ -152,7 +151,7 @@ const FileDetails = () => {
                     <HardDrive size={16} className="text-slate-400" /> {(file.size / (1024 * 1024)).toFixed(2)} MB
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <Calendar size={16} className="text-slate-400" /> {new Date(file.createdAt).toLocaleDateString()}
+                    <Calendar size={16} className="text-slate-400" /> {new Date(file.uploadDate).toLocaleDateString()}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                     <Shield size={16} /> Secure
@@ -163,7 +162,7 @@ const FileDetails = () => {
           </div>
 
           {/* AI Analysis Section */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-5 pointer-events-none">
               <Brain size={160} />
             </div>
@@ -198,12 +197,22 @@ const FileDetails = () => {
                 <div>
                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Tags</h4>
                   <div className="flex flex-wrap gap-2">
-                    {file.aiTags ? file.aiTags.split(',').map((tag, i) => (
-                      <span key={i} className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5 shadow-sm">
-                        <Tag size={12} className="text-slate-400" />
-                        {tag.trim()}
-                      </span>
-                    )) : (
+                    {file.aiTags ? (() => {
+                      // Parse tags: handle both JSON array string and comma-separated
+                      let tags = [];
+                      try {
+                        const parsed = JSON.parse(file.aiTags);
+                        tags = Array.isArray(parsed) ? parsed : [String(parsed)];
+                      } catch {
+                        tags = file.aiTags.split(',');
+                      }
+                      return tags.map((tag, i) => (
+                        <span key={i} className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-sm hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                          <Tag size={12} className="text-slate-400" />
+                          {String(tag).trim()}
+                        </span>
+                      ));
+                    })() : (
                       <span className="text-sm text-slate-500 italic">No tags identified.</span>
                     )}
                   </div>
@@ -213,12 +222,12 @@ const FileDetails = () => {
                   <div className="space-y-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
                     <div className="flex justify-between items-center text-sm font-medium">
                       <span className="text-slate-600 dark:text-slate-400">Score</span>
-                      <span className="text-blue-600 dark:text-blue-400">{file.aiConfidence || 0}%</span>
+                      <span className="text-blue-600 dark:text-blue-400">{Math.round((file.aiConfidence || 0) * 100)}%</span>
                     </div>
                     <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                        style={{ width: `${file.aiConfidence || 0}%` }}
+                        style={{ width: `${Math.round((file.aiConfidence || 0) * 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -230,7 +239,7 @@ const FileDetails = () => {
 
         {/* Sidebar Info Column */}
         <div className="space-y-8">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
               <Info size={18} className="text-blue-500" />
               File Information

@@ -36,7 +36,7 @@ aws:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
-  url: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent
+  url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
   retry:
     max-attempts: 3
     backoff-period: 2000
