@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transfer")
-@CrossOrigin(origins = "http://localhost:5173", exposedHeaders = {
+@CrossOrigin(origins = "${app.cors.allowed-origins}", exposedHeaders = {
     "Content-Disposition",
     "Content-Type",
     "Content-Length"
