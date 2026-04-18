@@ -3,9 +3,10 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import { Lock, Bell, Settings as SettingsIcon } from 'lucide-react';
+import { authService } from '../../services/authService';
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('password');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -13,8 +14,8 @@ const Settings = () => {
     confirmPassword: '',
   });
   const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    autoCategorize: true,
+    emailNotifications: user?.emailNotificationsEnabled ?? true,
+    autoCategorize: user?.aiClassificationEnabled ?? true,
   });
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -54,11 +55,30 @@ const Settings = () => {
     }
   };
 
-  const handlePreferenceChange = (key) => {
-    setPreferences({
+  const handlePreferenceChange = async (key) => {
+    const next = {
       ...preferences,
       [key]: !preferences[key],
-    });
+    };
+
+    setPreferences(next);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const updated = await authService.updatePreferences({
+        emailNotificationsEnabled: next.emailNotifications,
+        aiClassificationEnabled: next.autoCategorize,
+      });
+
+      updateUser(updated);
+      setMessage({ type: 'success', text: 'Preferences saved successfully' });
+    } catch (error) {
+      setPreferences(preferences);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to save preferences',
+      });
+    }
   };
 
   return (

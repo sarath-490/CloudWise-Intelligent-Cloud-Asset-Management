@@ -2,6 +2,8 @@ package com.cloudfileorganizer.backend.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -22,6 +24,39 @@ public class User {
     @Column(nullable = false, length = 20)
     private String role = "USER";
 
+    @Column
+    private Boolean aiClassificationEnabled = true;
+
+    @Column
+    private Boolean emailNotificationsEnabled = true;
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PrePersist
+    public void prePersist() {
+        if (aiClassificationEnabled == null) {
+            aiClassificationEnabled = true;
+        }
+        if (emailNotificationsEnabled == null) {
+            emailNotificationsEnabled = true;
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     // DEFAULT CONSTRUCTOR - REQUIRED BY HIBERNATE
     public User() {}
 
@@ -40,4 +75,16 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public Boolean getAiClassificationEnabled() { return aiClassificationEnabled; }
+    public void setAiClassificationEnabled(Boolean aiClassificationEnabled) { this.aiClassificationEnabled = aiClassificationEnabled; }
+
+    public Boolean getEmailNotificationsEnabled() { return emailNotificationsEnabled; }
+    public void setEmailNotificationsEnabled(Boolean emailNotificationsEnabled) { this.emailNotificationsEnabled = emailNotificationsEnabled; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

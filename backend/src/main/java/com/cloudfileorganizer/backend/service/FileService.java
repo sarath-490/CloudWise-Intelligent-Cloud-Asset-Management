@@ -62,13 +62,19 @@ public class FileService {
         fileMetadata.setCategory(normalizedCategory);
         fileMetadata.setUploadDate(LocalDateTime.now());
         fileMetadata.setUser(user);
-        fileMetadata.setAiAnalysisStatus(AiAnalysisStatus.PENDING);
+        boolean aiEnabledForUser = user.getAiClassificationEnabled() == null || user.getAiClassificationEnabled();
+        fileMetadata.setAiAnalysisStatus(aiEnabledForUser ? AiAnalysisStatus.PENDING : AiAnalysisStatus.COMPLETED);
+        if (!aiEnabledForUser) {
+            fileMetadata.setAiSummary("AI classification disabled by user preference.");
+        }
 
         // Save metadata to database
         FileMetadata savedFile = fileRepository.save(fileMetadata);
 
-        // Trigger AI analysis asynchronously
-        aiService.analyzeFile(savedFile.getId());
+        // Trigger AI analysis asynchronously only when user preference allows it.
+        if (aiEnabledForUser) {
+            aiService.analyzeFile(savedFile.getId());
+        }
 
         return savedFile;
     }
@@ -199,6 +205,9 @@ public class FileService {
     }
 
     public void reanalyzeFile(String id, User user) {
+        if (user.getAiClassificationEnabled() != null && !user.getAiClassificationEnabled()) {
+            throw new IllegalArgumentException("AI classification is disabled in your settings");
+        }
         FileMetadata file = fileRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new IllegalArgumentException("File not found or access denied"));
         aiService.analyzeFile(file.getId());

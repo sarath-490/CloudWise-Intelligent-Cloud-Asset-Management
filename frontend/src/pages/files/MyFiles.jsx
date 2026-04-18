@@ -16,6 +16,7 @@ import fileService from '../../services/fileService';
 import FileCard from '../../components/files/FileCard';
 import Button from '../../components/common/Button';
 import CustomSelect from '../../components/common/CustomSelect';
+import { parseAiTags } from '../../utils/aiTags';
 
 const MyFiles = () => {
   const [files, setFiles] = useState([]);
@@ -28,6 +29,7 @@ const MyFiles = () => {
   const [aiCategories, setAiCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedAiCategory, setSelectedAiCategory] = useState('All');
+  const [selectedTag, setSelectedTag] = useState('All');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const searchInputRef = useRef(null);
@@ -115,6 +117,10 @@ const MyFiles = () => {
       if (selectedAiCategory !== 'All') {
         match = match && (file.aiCategory === selectedAiCategory);
       }
+      if (selectedTag !== 'All') {
+        const tags = parseAiTags(file.aiTags).map((t) => t.toLowerCase());
+        match = match && tags.includes(selectedTag.toLowerCase());
+      }
       return match;
     })
     .sort((a, b) => {
@@ -125,6 +131,23 @@ const MyFiles = () => {
       if (sortBy === 'size') return (b.size || 0) - (a.size || 0);
       return 0;
     });
+
+  const aiTagStats = (files || []).reduce((acc, file) => {
+    parseAiTags(file.aiTags).forEach((tag) => {
+      const key = String(tag).trim();
+      if (!key) return;
+      acc[key] = (acc[key] || 0) + 1;
+    });
+    return acc;
+  }, {});
+
+  const aiTagOptions = [
+    { label: 'All Tags', value: 'All' },
+    ...Object.entries(aiTagStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 50)
+      .map(([tag, count]) => ({ label: `${tag} (${count})`, value: tag })),
+  ];
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -198,6 +221,13 @@ const MyFiles = () => {
             value={selectedAiCategory}
             onChange={setSelectedAiCategory}
             icon={Binary}
+          />
+
+          <CustomSelect
+            options={aiTagOptions}
+            value={selectedTag}
+            onChange={setSelectedTag}
+            icon={Database}
           />
         </div>
 

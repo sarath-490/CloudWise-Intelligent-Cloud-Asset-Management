@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import fileService from '../../services/fileService';
 import Loader from '../../components/common/Loader';
 import { BarChart3, TrendingUp, HardDrive } from 'lucide-react';
+import { parseAiTags } from '../../utils/aiTags';
 
 const Analytics = () => {
   const [analytics, setAnalytics] = useState({
     categoryStats: {},
+    aiCategoryStats: {},
+    aiTagStats: {},
     sizeByCategory: {},
     uploadTrends: [],
   });
@@ -27,13 +30,21 @@ const Analytics = () => {
 
       const files = result.data;
       const categoryStats = {};
+      const aiCategoryStats = {};
+      const aiTagStats = {};
       const sizeByCategory = {};
       const uploadTrends = {};
 
       files.forEach((file) => {
         const category = file.category || 'Uncategorized';
+        const aiCategory = file.aiCategory || 'Unclassified';
         categoryStats[category] = (categoryStats[category] || 0) + 1;
+        aiCategoryStats[aiCategory] = (aiCategoryStats[aiCategory] || 0) + 1;
         sizeByCategory[category] = (sizeByCategory[category] || 0) + (file.size || 0);
+
+        parseAiTags(file.aiTags).forEach((tag) => {
+          aiTagStats[tag] = (aiTagStats[tag] || 0) + 1;
+        });
 
         const date = new Date(file.uploadDate).toLocaleDateString();
         uploadTrends[date] = (uploadTrends[date] || 0) + 1;
@@ -41,6 +52,8 @@ const Analytics = () => {
 
       setAnalytics({
         categoryStats,
+        aiCategoryStats,
+        aiTagStats,
         sizeByCategory,
         uploadTrends: Object.entries(uploadTrends)
           .map(([date, count]) => ({ date, count }))
@@ -76,6 +89,34 @@ const Analytics = () => {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Analytics</h1>
         </div>
         <p className="text-base text-slate-600 dark:text-slate-400">Insights into your file organization</p>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">AI Categories and Top Tags</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Classification and tag distribution from AI analysis</p>
+        </div>
+        <div className="p-6 grid md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            {Object.entries(analytics.aiCategoryStats).map(([cat, count]) => (
+              <div key={cat} className="flex justify-between text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{cat}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{count}</span>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {Object.entries(analytics.aiTagStats)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 12)
+              .map(([tag, count]) => (
+                <div key={tag} className="flex justify-between text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">#{tag}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{count}</span>
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
 
       {/* Files by Category */}

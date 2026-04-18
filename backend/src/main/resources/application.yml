@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: CloudFileOrganizer
   servlet:
@@ -6,9 +8,9 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   datasource:
-    url: jdbc:postgresql://localhost:5432/cloud_file_db
-    username: postgres
-    password: ${DB_PASSWORD:Sarath18}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -24,7 +26,7 @@ spring:
     defer-datasource-initialization: false
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID}
@@ -50,3 +52,21 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     com.cloudfileorganizer: DEBUG
+
+app:
+  base-url: ${APP_BASE_URL}
+
+transfer:
+  default-expiry-minutes: ${TRANSFER_DEFAULT_EXPIRY_MINUTES:10}
+  default-max-downloads: ${TRANSFER_DEFAULT_MAX_DOWNLOADS:1}
+  max-file-size-bytes: ${TRANSFER_MAX_FILE_SIZE_BYTES:52428800}
+  pin-length: ${TRANSFER_PIN_LENGTH:6}
+  max-pin-attempts: ${TRANSFER_MAX_PIN_ATTEMPTS:5}
+  pin-rate-window-minutes: ${TRANSFER_PIN_RATE_WINDOW_MINUTES:15}
+  pin-rate-max-attempts: ${TRANSFER_PIN_RATE_MAX_ATTEMPTS:5}
+  lock-minutes: ${TRANSFER_LOCK_MINUTES:15}
+  verification-ttl-seconds: ${TRANSFER_VERIFICATION_TTL_SECONDS:180}
+  download-url-seconds: ${TRANSFER_DOWNLOAD_URL_SECONDS:60}
+  upload-url-seconds: ${TRANSFER_UPLOAD_URL_SECONDS:3600}
+  pin-encryption-key: ${TRANSFER_PIN_ENCRYPTION_KEY:}
+  cleanup-interval-ms: ${TRANSFER_CLEANUP_INTERVAL_MS:300000}

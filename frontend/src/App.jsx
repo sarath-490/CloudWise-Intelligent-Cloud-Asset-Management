@@ -19,6 +19,8 @@ import AuthPage from './pages/auth/AuthPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import NotFound from './pages/error/NotFound';
 import Unauthorized from './pages/error/Unauthorized';
+import TransferHub from './pages/transfer/TransferHub';
+import TransferReceive from './pages/transfer/TransferReceive';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,6 +53,7 @@ function App() {
               <Route path="/login" element={<AuthPage />} />
               <Route path="/register" element={<AuthPage />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/transfer/:sessionId" element={<TransferReceive />} />
 
               {/* Protected Routes */}
               <Route
@@ -119,6 +122,16 @@ function App() {
                   <ProtectedRoute>
                     <AppLayout>
                       <Settings />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/transfer"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <TransferHub />
                     </AppLayout>
                   </ProtectedRoute>
                 }

@@ -88,6 +88,9 @@ public class AuthController {
             userData.put("name", savedUser.getName());
             userData.put("email", savedUser.getEmail());
             userData.put("role", savedUser.getRole());
+            userData.put("aiClassificationEnabled", savedUser.getAiClassificationEnabled());
+            userData.put("emailNotificationsEnabled", savedUser.getEmailNotificationsEnabled());
+            userData.put("createdAt", savedUser.getCreatedAt());
             
             response.put("user", userData);
 
@@ -127,6 +130,9 @@ public class AuthController {
             userData.put("name", user.getName());
             userData.put("email", user.getEmail());
             userData.put("role", user.getRole());
+            userData.put("aiClassificationEnabled", user.getAiClassificationEnabled());
+            userData.put("emailNotificationsEnabled", user.getEmailNotificationsEnabled());
+            userData.put("createdAt", user.getCreatedAt());
             
             response.put("user", userData);
 

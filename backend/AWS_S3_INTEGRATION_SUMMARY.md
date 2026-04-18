@@ -244,6 +244,43 @@ Response: {
 5. **Test Download**: Generate download URL and verify it works
 6. **Test Delete**: Delete file and verify removal from S3 and database
 
+## Transfer Feature S3 CORS (Required)
+
+The secure transfer flow uploads directly from browser to S3 using a pre-signed `PUT` URL.
+If bucket CORS is missing, browser upload fails with network/CORS errors even when backend APIs are healthy.
+
+Apply a bucket CORS configuration similar to:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "http://localhost:5173"
+    ],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["Content-Type", "x-amz-*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+Minimum requirements for transfer upload CORS:
+- Allow the frontend origin exactly.
+- Allow `PUT`, `GET`, and `HEAD` methods. Do not list `OPTIONS` explicitly; S3 handles preflight for allowed methods.
+- Allow `Content-Type` and `x-amz-*` request headers.
+
+HTTP 403 troubleshooting for direct pre-signed uploads:
+- Ensure pre-signed URL expiry is long enough (default is now 3600 seconds).
+- Ensure IAM principal used by backend signing has `s3:PutObject` permission on the target object prefix.
+- Ensure browser `Content-Type` matches the signed header exactly.
+- Do not include `x-amz-acl`/ACL params when S3 Block Public Access is enabled.
+- Ensure S3 client/presigner region matches the bucket region.
+
+Note on auto-delete messaging:
+- UI shows auto-delete time from backend session expiry.
+- Actual S3 object deletion is performed by backend cleanup scheduler at/after expiry.
+
 ## Notes
 
 - **Frontend Compatibility**: All endpoints match the existing frontend API contract

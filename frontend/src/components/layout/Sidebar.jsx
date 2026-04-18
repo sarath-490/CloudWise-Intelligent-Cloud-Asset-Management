@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   HardDrive,
   Sparkles
+  , Share2
 } from 'lucide-react';
 import fileService from '../../services/fileService';
 
@@ -41,6 +42,7 @@ const Sidebar = ({ className }) => {
     { name: 'Upload', path: '/upload', icon: <UploadCloud size={20} /> },
     { name: 'My Files', path: '/files', icon: <FolderOpen size={20} /> },
     { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
+    { name: 'Transfer', path: '/transfer', icon: <Share2 size={20} /> },
   ];
 
   const secondaryItems = [

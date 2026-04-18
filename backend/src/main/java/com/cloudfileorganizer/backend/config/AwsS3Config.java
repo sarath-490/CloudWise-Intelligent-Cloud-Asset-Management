@@ -3,30 +3,51 @@ package com.cloudfileorganizer.backend.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
 public class AwsS3Config {
 
-    @Value("${aws.access-key-id}")
+    @Value("${aws.access-key-id:}")
     private String accessKeyId;
 
-    @Value("${aws.secret-access-key}")
+    @Value("${aws.secret-access-key:}")
     private String secretAccessKey;
 
     @Value("${aws.region}")
     private String region;
 
+    private AwsCredentialsProvider resolveCredentialsProvider() {
+        boolean hasStaticAccessKey = accessKeyId != null && !accessKeyId.isBlank();
+        boolean hasStaticSecretKey = secretAccessKey != null && !secretAccessKey.isBlank();
+
+        if (hasStaticAccessKey && hasStaticSecretKey) {
+            AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKeyId.trim(), secretAccessKey.trim());
+            return StaticCredentialsProvider.create(awsCredentials);
+        }
+
+        return DefaultCredentialsProvider.create();
+    }
+
     @Bean
     public S3Client s3Client() {
-        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
-        
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+                .credentialsProvider(resolveCredentialsProvider())
+                .build();
+    }
+
+    @Bean
+    public S3Presigner s3Presigner() {
+        return S3Presigner.builder()
+                .region(Region.of(region))
+                .credentialsProvider(resolveCredentialsProvider())
                 .build();
     }
 }
