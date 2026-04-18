@@ -1,40 +1,33 @@
 # CloudWise - Cloud File Organizer
 
-CloudWise is a full-stack cloud file management system with AI-assisted categorization, secure file transfers, and an admin console for operational control. The project includes a Spring Boot backend and a Vite/React frontend.
+CloudWise is a full-stack cloud file management platform with AI-assisted categorization, secure transfer sessions, and an administrative console for governance and configuration.
 
-## Features
-- Secure file upload and download with AWS S3 storage
-- AI-assisted file categorization and summaries
-- Search and filtering across stored files
-- Secure transfer sessions with PIN verification
-- Admin console for user governance, storage limits, and platform settings
+## Key Capabilities
+- S3-backed file storage with upload, download, and metadata management
+- AI analysis and tagging workflows
+- Secure transfer sessions with PIN verification and expiry controls
+- Role-based access controls and admin-only operations
+- Storage limits and platform settings managed via admin endpoints
 
-## Repository Structure
-- backend: Spring Boot API, security, data models, and integrations
-- frontend: Vite + React application and UI components
+## Architecture
+- Backend: Spring Boot REST API, JWT authentication, PostgreSQL persistence
+- Frontend: Vite + React single-page application
+- Integrations: AWS S3 and Google Gemini API
 
-## Tech Stack
-- Backend: Java 17, Spring Boot, Spring Security, JPA/Hibernate, PostgreSQL
-- Frontend: React, Vite, Tailwind CSS
-- Storage: AWS S3
-- AI: Google Gemini API
+## Repository Layout
+- backend/  Spring Boot API, security, services, and database models
+- frontend/ React UI, routing, services, and shared components
 
-## Getting Started
+## Configuration
+Environment variables are required for both services. Do not commit secrets.
 
-### Prerequisites
-- Java 17
-- Node.js 18+
-- PostgreSQL
-
-### Environment Variables
-Create environment files for each app. Do not commit secrets.
-
-Backend example (backend/.env):
+Backend (backend/.env):
 - DB_URL
 - DB_USERNAME
 - DB_PASSWORD
 - SERVER_PORT
 - APP_BASE_URL
+- APP_CORS_ALLOWED_ORIGINS
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 - AWS_REGION
@@ -42,24 +35,24 @@ Backend example (backend/.env):
 - GEMINI_API_KEY
 - TRANSFER_PIN_ENCRYPTION_KEY
 
-Frontend example (frontend/.env):
+Frontend (frontend/.env):
 - VITE_API_BASE_URL
 
-### Run Backend
-From backend:
+## Local Development
+Backend:
 1) mvn spring-boot:run
 
-### Run Frontend
-From frontend:
+Frontend:
 1) npm install
 2) npm run dev
 
-## Admin Access
-The admin panel is available at /admin for users with the ADMIN role. Access is controlled by server-side role checks.
+## Admin Console
+Admin routes are served under /admin and require the ADMIN role.
 
-## Notes
-- For production, configure secure secrets management and HTTPS.
-- Do not store credentials in the repository.
+## Deployment Notes
+- Set production origins in APP_CORS_ALLOWED_ORIGINS.
+- Use secure secrets management for API keys and database credentials.
+- Enable HTTPS in production environments.
 
 ## License
-Proprietary - for internal use only.
+Proprietary - internal use only.

@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class AiController {
 
     @Autowired

@@ -19,11 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transfer")
-@CrossOrigin(origins = "${app.cors.allowed-origins}", exposedHeaders = {
-    "Content-Disposition",
-    "Content-Type",
-    "Content-Length"
-})
 public class TransferController {
 
     @Autowired
