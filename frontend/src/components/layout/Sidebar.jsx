@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation, Link } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   UploadCloud,
@@ -15,9 +15,11 @@ import {
   , Share2
 } from 'lucide-react';
 import fileService from '../../services/fileService';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ className }) => {
   const location = useLocation();
+  const { user } = useAuth();
   const [stats, setStats] = useState({ percentUsed: 0 });
 
   useEffect(() => {
@@ -37,18 +39,22 @@ const Sidebar = ({ className }) => {
     fetchStats();
   }, [location.pathname]);
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Upload', path: '/upload', icon: <UploadCloud size={20} /> },
-    { name: 'My Files', path: '/files', icon: <FolderOpen size={20} /> },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
-    { name: 'Transfer', path: '/transfer', icon: <Share2 size={20} /> },
-  ];
+  const menuItems = user?.role === 'ADMIN'
+    ? [{ name: 'Admin', path: '/admin', icon: <ShieldCheck size={20} /> }]
+    : [
+        { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+        { name: 'Upload', path: '/upload', icon: <UploadCloud size={20} /> },
+        { name: 'My Files', path: '/files', icon: <FolderOpen size={20} /> },
+        { name: 'Analytics', path: '/analytics', icon: <BarChart3 size={20} /> },
+        { name: 'Transfer', path: '/transfer', icon: <Share2 size={20} /> },
+      ];
 
-  const secondaryItems = [
-    { name: 'Profile', path: '/profile', icon: <User size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
-  ];
+  const secondaryItems = user?.role === 'ADMIN'
+    ? []
+    : [
+        { name: 'Profile', path: '/profile', icon: <User size={20} /> },
+        { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+      ];
 
   return (
     <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50 z-40 flex flex-col transition-all duration-300 transform lg:translate-x-0 ${className === 'open' ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -93,36 +99,39 @@ const Sidebar = ({ className }) => {
           </nav>
         </div>
 
-        <div>
-          <div className="px-4 mb-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600">Account</span>
+        {secondaryItems.length > 0 && (
+          <div>
+            <div className="px-4 mb-4">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600">Account</span>
+            </div>
+            <nav className="space-y-2">
+              {secondaryItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 font-bold'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-900/50'
+                      }`}
+                  >
+                    <div className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'} transition-colors`}>
+                      {item.icon}
+                    </div>
+                    <span className="text-sm tracking-tight">{item.name}</span>
+                  </NavLink>
+                );
+              })}
+            </nav>
           </div>
-          <nav className="space-y-2">
-            {secondaryItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 font-bold'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-900/50'
-                    }`}
-                >
-                  <div className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'} transition-colors`}>
-                    {item.icon}
-                  </div>
-                  <span className="text-sm tracking-tight">{item.name}</span>
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
+        )}
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-6 mt-auto">
-        <div className="p-5 rounded-[28px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 group hover:border-indigo-200 dark:hover:border-indigo-900/30 transition-all">
+      {user?.role !== 'ADMIN' && (
+        <div className="p-6 mt-auto">
+          <div className="p-5 rounded-[28px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 group hover:border-indigo-200 dark:hover:border-indigo-900/30 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <ShieldCheck className="text-emerald-500 w-4 h-4" />
@@ -146,8 +155,9 @@ const Sidebar = ({ className }) => {
           <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-3 leading-tight opacity-0 group-hover:opacity-100 transition-opacity">
             CloudWise Smart Organizer
           </p>
+          </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 };

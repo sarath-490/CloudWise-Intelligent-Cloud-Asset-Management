@@ -14,9 +14,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import com.cloudfileorganizer.backend.repository.UserRepository;
 import com.cloudfileorganizer.backend.security.JwtUtil;
 import com.cloudfileorganizer.backend.model.User;
+import com.cloudfileorganizer.backend.service.AppSettingService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,6 +32,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private AppSettingService appSettingService;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -72,6 +78,14 @@ public class AuthController {
             // Encode password and set role
             user.setPassword(encoder.encode(user.getPassword()));
             user.setRole("USER");
+
+            if (user.getStorageLimitBytes() == null) {
+                Long defaultLimit = appSettingService.getLong(
+                        AppSettingService.KEY_DEFAULT_USER_STORAGE_LIMIT_BYTES,
+                        1L * 1024 * 1024 * 1024
+                );
+                user.setStorageLimitBytes(defaultLimit);
+            }
             
             // Save user
             User savedUser = userRepo.save(user);
@@ -90,6 +104,8 @@ public class AuthController {
             userData.put("role", savedUser.getRole());
             userData.put("aiClassificationEnabled", savedUser.getAiClassificationEnabled());
             userData.put("emailNotificationsEnabled", savedUser.getEmailNotificationsEnabled());
+            userData.put("active", savedUser.getActive());
+            userData.put("storageLimitBytes", savedUser.getStorageLimitBytes());
             userData.put("createdAt", savedUser.getCreatedAt());
             
             response.put("user", userData);
@@ -118,6 +134,12 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
             }
 
+            if (user.getActive() != null && !user.getActive()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "Account is disabled. Contact support.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
             // Generate JWT token
             String token = jwtUtil.generateToken(user.getEmail());
 
@@ -132,6 +154,8 @@ public class AuthController {
             userData.put("role", user.getRole());
             userData.put("aiClassificationEnabled", user.getAiClassificationEnabled());
             userData.put("emailNotificationsEnabled", user.getEmailNotificationsEnabled());
+            userData.put("active", user.getActive());
+            userData.put("storageLimitBytes", user.getStorageLimitBytes());
             userData.put("createdAt", user.getCreatedAt());
             
             response.put("user", userData);
@@ -146,6 +170,71 @@ public class AuthController {
             error.put("message", "Login failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, Object> payload) {
+        String email = payload.get("email") == null ? null : payload.get("email").toString();
+        if (email == null || email.trim().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Email is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        userRepo.findByEmail(email.trim().toLowerCase()).ifPresent(user -> {
+            String token = UUID.randomUUID().toString();
+            user.setResetToken(token);
+            user.setResetTokenExpiresAt(LocalDateTime.now().plusMinutes(30));
+            userRepo.save(user);
+        });
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "If the account exists, a reset link has been generated.");
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, Object> payload) {
+        String token = payload.get("token") == null ? null : payload.get("token").toString();
+        String password = payload.get("password") == null ? null : payload.get("password").toString();
+
+        if (token == null || token.trim().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Token is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Password is required");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        String pwd = password;
+        if (pwd.length() < 8 || !pwd.matches(".*[A-Z].*") || !pwd.matches(".*[a-z].*") || !pwd.matches(".*[0-9].*")
+                || !pwd.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Password must be at least 8 characters with uppercase, lowercase, number, and special character");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        User user = userRepo.findByResetToken(token)
+                .orElse(null);
+        if (user == null || user.getResetTokenExpiresAt() == null
+                || user.getResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Reset token is invalid or expired");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        user.setPassword(encoder.encode(password));
+        user.setResetToken(null);
+        user.setResetTokenExpiresAt(null);
+        userRepo.save(user);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Password reset successfully");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")

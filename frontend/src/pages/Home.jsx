@@ -494,6 +494,8 @@ const Home = () => {
               <ul className="space-y-3 text-sm font-medium text-muted-foreground">
                 <li><Link to="/login" className="hover:text-primary transition-colors">Sign In</Link></li>
                 <li><Link to="/register" className="hover:text-primary transition-colors">Register</Link></li>
+                <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="hover:text-primary transition-colors">Terms of Use</Link></li>
               </ul>
             </div>
           </div>

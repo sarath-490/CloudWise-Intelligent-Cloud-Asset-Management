@@ -4,6 +4,7 @@ import fileService from '../../services/fileService';
 import UploadBox from '../../components/files/UploadBox';
 import Button from '../../components/common/Button';
 import { Upload, Info, ShieldCheck, Zap, Sparkles, Binary, ArrowLeft } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 const UploadFile = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const UploadFile = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
   const messageRef = useRef(null);
+  const { showToast } = useToast();
 
   const handleUpload = async (files) => {
     const filesToUpload = Array.isArray(files) ? files : [files];
@@ -28,6 +30,7 @@ const UploadFile = () => {
         type: 'success',
         text: `Successfully uploaded ${filesToUpload.length} file(s) to cloud storage.`,
       });
+      showToast({ type: 'success', message: `Uploaded ${filesToUpload.length} file(s).`, duration: 7000 });
 
       // Auto-scroll to success message
       setTimeout(() => {
@@ -36,12 +39,13 @@ const UploadFile = () => {
 
       setTimeout(() => {
         navigate('/files');
-      }, 1500);
+      }, 2000);
     } catch (error) {
       setMessage({
         type: 'error',
         text: error.response?.data?.message || 'Upload failed. Please check your connection and try again.',
       });
+      showToast({ type: 'error', message: error.response?.data?.message || 'Upload failed. Please try again.', duration: 7000 });
     } finally {
       setUploading(false);
       setUploadProgress(0);

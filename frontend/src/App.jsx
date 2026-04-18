@@ -16,11 +16,15 @@ import FileDetails from './pages/files/FileDetails';
 import Profile from './pages/profile/Profile';
 import Settings from './pages/settings/Settings';
 import AuthPage from './pages/auth/AuthPage';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import NotFound from './pages/error/NotFound';
 import Unauthorized from './pages/error/Unauthorized';
 import TransferHub from './pages/transfer/TransferHub';
 import TransferReceive from './pages/transfer/TransferReceive';
+import PrivacyPolicy from './pages/legal/Privacy';
+import TermsOfUse from './pages/legal/TermsOfUse';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,8 +56,12 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<AuthPage />} />
               <Route path="/register" element={<AuthPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/transfer/:sessionId" element={<TransferReceive />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfUse />} />
 
               {/* Protected Routes */}
               <Route

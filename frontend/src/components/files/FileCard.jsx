@@ -18,9 +18,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import fileService from '../../services/fileService';
+import { useToast } from '../../context/ToastContext';
 
 const FileCard = ({ file, viewMode = 'grid' }) => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   if (!file) return null;
 
@@ -43,6 +46,28 @@ const FileCard = ({ file, viewMode = 'grid' }) => {
   };
 
   const createdAt = file.uploadDate ? new Date(file.uploadDate).toLocaleDateString() : 'Unknown Date';
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    const result = await fileService.downloadFile(file.id, file.originalName || file.name);
+    if (result?.success === false) {
+      showToast({ type: 'error', message: result.error || 'Download failed. Please try again.' });
+      return;
+    }
+    showToast({ type: 'success', message: 'Download started.' });
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this file?')) return;
+    const result = await fileService.deleteFile(file.id);
+    if (result?.success === false) {
+      showToast({ type: 'error', message: result.error || 'Delete failed. Please try again.', duration: 7000 });
+      return;
+    }
+    showToast({ type: 'success', message: 'File deleted.', duration: 7000 });
+    setTimeout(() => window.location.reload(), 800);
+  };
 
   if (viewMode === 'list') {
     return (
@@ -89,7 +114,7 @@ const FileCard = ({ file, viewMode = 'grid' }) => {
           {/* Actions Column */}
           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-all">
             <button
-              onClick={(e) => { e.stopPropagation(); fileService.downloadFile(file.id, file.originalName || file.name); }}
+              onClick={handleDownload}
               aria-label="Download File"
               className="p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-all"
               title="Download"
@@ -97,12 +122,7 @@ const FileCard = ({ file, viewMode = 'grid' }) => {
               <Download size={18} />
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm('Delete this file?')) {
-                  fileService.deleteFile(file.id).then(() => window.location.reload());
-                }
-              }}
+              onClick={handleDelete}
               className="p-2.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
               aria-label="Delete File"
               title="Delete"
@@ -150,7 +170,7 @@ const FileCard = ({ file, viewMode = 'grid' }) => {
           ) : null}
 
           <button
-            onClick={(e) => { e.stopPropagation(); fileService.downloadFile(file.id, file.originalName || file.name); }}
+            onClick={handleDownload}
             aria-label="Download File"
             className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
             title="Download"
@@ -158,12 +178,7 @@ const FileCard = ({ file, viewMode = 'grid' }) => {
             <Download size={16} />
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm('Delete this file?')) {
-                fileService.deleteFile(file.id).then(() => window.location.reload());
-              }
-            }}
+            onClick={handleDelete}
             aria-label="Delete File"
             className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20"
             title="Delete"

@@ -23,6 +23,7 @@ import fileService from '../../services/fileService';
 import aiService from '../../services/aiService';
 import Button from '../../components/common/Button';
 import Loader from '../../components/common/Loader';
+import { useToast } from '../../context/ToastContext';
 
 const FileDetails = () => {
   const { id } = useParams();
@@ -31,6 +32,7 @@ const FileDetails = () => {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchFileDetails();
@@ -56,9 +58,15 @@ const FileDetails = () => {
   const handleDownload = async () => {
     try {
       setDownloading(true);
-      await fileService.downloadFile(id, file.originalName || file.name);
+      const result = await fileService.downloadFile(id, file.originalName || file.name);
+      if (result?.success === false) {
+        showToast({ type: 'error', message: result.error || 'Download failed. Please try again.', duration: 7000 });
+      } else {
+        showToast({ type: 'success', message: 'Download started.', duration: 6000 });
+      }
     } catch (error) {
       console.error('Download error:', error);
+      showToast({ type: 'error', message: 'Download failed. Please try again.', duration: 7000 });
     } finally {
       setDownloading(false);
     }
@@ -69,10 +77,14 @@ const FileDetails = () => {
     try {
       const result = await fileService.deleteFile(id);
       if (result.success) {
-        navigate('/files');
+        showToast({ type: 'success', message: 'File deleted.', duration: 7000 });
+        setTimeout(() => navigate('/files'), 800);
+      } else {
+        showToast({ type: 'error', message: result.error || 'Delete failed. Please try again.', duration: 7000 });
       }
     } catch (error) {
       console.error('Delete error:', error);
+      showToast({ type: 'error', message: 'Delete failed. Please try again.', duration: 7000 });
     }
   };
 

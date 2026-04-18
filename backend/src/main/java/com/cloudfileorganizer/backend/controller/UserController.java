@@ -58,6 +58,8 @@ public class UserController {
         data.put("role", user.getRole());
         data.put("aiClassificationEnabled", user.getAiClassificationEnabled());
         data.put("emailNotificationsEnabled", user.getEmailNotificationsEnabled());
+        data.put("active", user.getActive());
+        data.put("storageLimitBytes", user.getStorageLimitBytes());
         data.put("createdAt", user.getCreatedAt());
         return data;
     }

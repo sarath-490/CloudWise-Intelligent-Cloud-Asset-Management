@@ -100,6 +100,18 @@ public class TransferController {
         }
     }
 
+    @PostMapping("/end")
+    public ResponseEntity<?> endSession(@RequestBody Map<String, Object> request,
+                                        @AuthenticationPrincipal User user) {
+        try {
+            requireAuthenticatedUser(user);
+            String sessionId = request.get("session_id") == null ? null : request.get("session_id").toString();
+            return ResponseEntity.ok(success(transferService.endSession(sessionId, user.getId())));
+        } catch (TransferServiceException ex) {
+            return ResponseEntity.status(ex.getStatus()).body(error(ex.getMessage()));
+        }
+    }
+
     @PostMapping("/verify-pin")
     public ResponseEntity<?> verifyPin(@RequestBody Map<String, Object> request,
                                        @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedFor,

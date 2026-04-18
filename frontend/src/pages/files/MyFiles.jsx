@@ -17,6 +17,7 @@ import FileCard from '../../components/files/FileCard';
 import Button from '../../components/common/Button';
 import CustomSelect from '../../components/common/CustomSelect';
 import { parseAiTags } from '../../utils/aiTags';
+import { useToast } from '../../context/ToastContext';
 
 const MyFiles = () => {
   const [files, setFiles] = useState([]);
@@ -33,6 +34,7 @@ const MyFiles = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const searchInputRef = useRef(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadFiles();
@@ -98,12 +100,15 @@ const MyFiles = () => {
         setIsSelectionMode(false);
         loadFiles();
         loadCategories();
+        showToast({ type: 'success', message: `Deleted ${selectedFiles.length} file(s).` });
       } else {
         setError(result.message || 'Failed to delete selected files.');
+        showToast({ type: 'error', message: result.message || 'Bulk delete failed.' });
       }
     } catch (err) {
       console.error('Bulk delete failed:', err);
       setError('An error occurred during bulk deletion.');
+      showToast({ type: 'error', message: 'Bulk delete failed. Please try again.' });
     }
   };
 

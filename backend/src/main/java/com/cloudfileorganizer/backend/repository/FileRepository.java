@@ -22,6 +22,8 @@ public interface FileRepository extends JpaRepository<FileMetadata, String> {
     @org.springframework.data.jpa.repository.Query("SELECT SUM(f.size) FROM FileMetadata f WHERE f.user = :user")
     Long getTotalStorageSizeByUser(@org.springframework.data.repository.query.Param("user") User user);
 
+    long countByUser(User user);
+
     @org.springframework.data.jpa.repository.Query("SELECT f.category, COUNT(f) FROM FileMetadata f WHERE f.user = :user GROUP BY f.category")
     List<Object[]> countFilesByCategory(@org.springframework.data.repository.query.Param("user") User user);
 

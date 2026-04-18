@@ -130,6 +130,11 @@ const transferService = {
     return response.data;
   },
 
+  endSession: async ({ session_id }) => {
+    const response = await api.post('/transfer/end', { session_id });
+    return response.data;
+  },
+
   verifyPin: async ({ session_id, pin }) => {
     const response = await api.post('/transfer/verify-pin', {
       session_id,

@@ -21,5 +21,7 @@ public interface TransferSessionRepository extends JpaRepository<TransferSession
 
     List<TransferSession> findByExpiresAtBeforeAndStatusNot(LocalDateTime expiresAt, TransferSessionStatus status);
 
+    List<TransferSession> findByExpiresAtAfterAndStatusNot(LocalDateTime expiresAt, TransferSessionStatus status);
+
     List<TransferSession> findByCreatedByUserIdAndExpiresAtAfterOrderByCreatedAtDesc(Long createdByUserId, LocalDateTime expiresAt);
 }

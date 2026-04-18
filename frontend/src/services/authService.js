@@ -19,7 +19,19 @@ export const authService = {
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
     }
+  },
+
+  forgotPassword: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async ({ token, password }) => {
+    const response = await api.post('/auth/reset-password', { token, password });
+    return response.data;
   },
 
   getProfile: async () => {

@@ -6,22 +6,42 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [storageType, setStorageType] = useState('local');
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
+      const localToken = localStorage.getItem('token');
+      const sessionToken = sessionStorage.getItem('token');
+      const token = localToken || sessionToken;
+      const storedUser = localToken
+        ? localStorage.getItem('user')
+        : sessionStorage.getItem('user');
+
+      if (localToken) {
+        setStorageType('local');
+      } else if (sessionToken) {
+        setStorageType('session');
+      }
 
       if (token && storedUser) {
         try {
           setUser(JSON.parse(storedUser));
-          // Optionally verify token with backend
-          // const profile = await authService.getProfile();
-          // setUser(profile);
+          const profile = await authService.getProfile();
+          const nextUser = profile?.user || profile;
+          if (nextUser) {
+            setUser(nextUser);
+            if (localToken) {
+              localStorage.setItem('user', JSON.stringify(nextUser));
+            } else {
+              sessionStorage.setItem('user', JSON.stringify(nextUser));
+            }
+          }
         } catch (error) {
           console.error('Auth initialization error:', error);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
         }
       }
       setLoading(false);
@@ -30,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, options = {}) => {
     try {
       const response = await authService.login(email, password);
       const { token, user: userData } = response;
@@ -42,8 +62,11 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
+      const remember = options.remember === true;
+      const store = remember ? localStorage : sessionStorage;
+      store.setItem('token', token);
+      store.setItem('user', JSON.stringify(userData));
+      setStorageType(remember ? 'local' : 'session');
       setUser(userData);
 
       return { success: true };
@@ -70,6 +93,7 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(newUser));
+      setStorageType('local');
       setUser(newUser);
 
       return { success: true };
@@ -84,12 +108,14 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await authService.logout();
     setUser(null);
+    setStorageType('local');
     // Redirect handled by component using this function
   };
 
   const updateUser = (nextUser) => {
     setUser(nextUser);
-    localStorage.setItem('user', JSON.stringify(nextUser));
+    const store = storageType === 'session' ? sessionStorage : localStorage;
+    store.setItem('user', JSON.stringify(nextUser));
   };
 
   const value = {

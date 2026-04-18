@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 import {
   Bell,
   Menu,
@@ -15,9 +16,11 @@ const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { showToast } = useToast();
 
   const handleLogout = async () => {
     await logout();
+    showToast({ type: 'success', message: 'Signed out successfully.' });
     navigate('/login');
   };
 

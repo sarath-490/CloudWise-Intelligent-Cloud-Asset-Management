@@ -30,6 +30,18 @@ public class User {
     @Column
     private Boolean emailNotificationsEnabled = true;
 
+    @Column
+    private Boolean active = true;
+
+    @Column
+    private Long storageLimitBytes;
+
+    @Column(length = 120)
+    private String resetToken;
+
+    @Column
+    private LocalDateTime resetTokenExpiresAt;
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -43,6 +55,9 @@ public class User {
         }
         if (emailNotificationsEnabled == null) {
             emailNotificationsEnabled = true;
+        }
+        if (active == null) {
+            active = true;
         }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
@@ -81,6 +96,18 @@ public class User {
 
     public Boolean getEmailNotificationsEnabled() { return emailNotificationsEnabled; }
     public void setEmailNotificationsEnabled(Boolean emailNotificationsEnabled) { this.emailNotificationsEnabled = emailNotificationsEnabled; }
+
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+
+    public Long getStorageLimitBytes() { return storageLimitBytes; }
+    public void setStorageLimitBytes(Long storageLimitBytes) { this.storageLimitBytes = storageLimitBytes; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public LocalDateTime getResetTokenExpiresAt() { return resetTokenExpiresAt; }
+    public void setResetTokenExpiresAt(LocalDateTime resetTokenExpiresAt) { this.resetTokenExpiresAt = resetTokenExpiresAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

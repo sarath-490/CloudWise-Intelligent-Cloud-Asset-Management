@@ -5,6 +5,7 @@ import com.cloudfileorganizer.backend.model.TransferSession;
 import com.cloudfileorganizer.backend.model.TransferSessionStatus;
 import com.cloudfileorganizer.backend.repository.TransferPinAttemptRepository;
 import com.cloudfileorganizer.backend.repository.TransferSessionRepository;
+import com.cloudfileorganizer.backend.service.AppSettingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,9 @@ public class TransferService {
 
     @Autowired
     private TransferPinAttemptRepository transferPinAttemptRepository;
+
+    @Autowired
+    private AppSettingService appSettingService;
 
     @Autowired
     private S3Service s3Service;
@@ -94,8 +98,10 @@ public class TransferService {
     private String appBaseUrl;
 
     public Map<String, Object> createSession(Integer maxDownloads, Integer expiryMinutes, String clientBaseUrl, Long createdByUserId) {
-        int safeMaxDownloads = (maxDownloads == null) ? defaultMaxDownloads : maxDownloads;
-        int safeExpiryMinutes = (expiryMinutes == null) ? defaultExpiryMinutes : expiryMinutes;
+        int effectiveDefaultMaxDownloads = resolveDefaultMaxDownloads();
+        int effectiveDefaultExpiryMinutes = resolveDefaultExpiryMinutes();
+        int safeMaxDownloads = (maxDownloads == null) ? effectiveDefaultMaxDownloads : maxDownloads;
+        int safeExpiryMinutes = (expiryMinutes == null) ? effectiveDefaultExpiryMinutes : expiryMinutes;
 
         if (safeMaxDownloads < 1 || safeMaxDownloads > MAX_ALLOWED_DOWNLOADS) {
             throw new TransferServiceException(HttpStatus.BAD_REQUEST, "max_downloads must be between 1 and 10");
@@ -194,8 +200,9 @@ public class TransferService {
         if (fileSize == null || fileSize <= 0) {
             throw new TransferServiceException(HttpStatus.BAD_REQUEST, "file_size must be greater than 0");
         }
-        if (fileSize > maxFileSizeBytes) {
-            throw new TransferServiceException(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds 50MB limit");
+        long effectiveMaxFileSizeBytes = resolveTransferMaxFileSizeBytes();
+        if (fileSize > effectiveMaxFileSizeBytes) {
+            throw new TransferServiceException(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds transfer limit");
         }
 
         TransferSession session = transferSessionRepository.findBySessionId(sessionId)
@@ -462,6 +469,78 @@ public class TransferService {
         return data;
     }
 
+    @Transactional
+    public Map<String, Object> endSession(String sessionId, Long requesterUserId) {
+        return endSession(sessionId, requesterUserId, false);
+    }
+
+    public Map<String, Object> endSessionAsAdmin(String sessionId) {
+        return endSession(sessionId, null, true);
+    }
+
+    @Transactional
+    public Map<String, Object> endSession(String sessionId, Long requesterUserId, boolean isAdmin) {
+        validateSessionId(sessionId);
+
+        TransferSession session = transferSessionRepository.findBySessionId(sessionId)
+                .orElseThrow(() -> new TransferServiceException(HttpStatus.NOT_FOUND, "Session not found"));
+
+        if (!isAdmin && !Objects.equals(session.getCreatedByUserId(), requesterUserId)) {
+            throw new TransferServiceException(HttpStatus.FORBIDDEN, "You do not own this transfer session");
+        }
+
+        if (session.getStatus() == TransferSessionStatus.EXPIRED) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("session_id", sessionId);
+            data.put("status", "expired");
+            return data;
+        }
+
+        if (session.getFileKey() != null && !session.getFileKey().isBlank()) {
+            try {
+                s3Service.deleteFile(session.getFileKey());
+            } catch (Exception ex) {
+                logger.warn("Failed to delete S3 object for ended session {}: {}", sessionId, ex.getMessage());
+            }
+        }
+
+        session.setStatus(TransferSessionStatus.EXPIRED);
+        session.setVerificationTokenHash(null);
+        session.setVerificationExpiresAt(null);
+        session.setUpdatedAt(LocalDateTime.now());
+        transferSessionRepository.save(session);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("session_id", sessionId);
+        data.put("status", "expired");
+        return data;
+    }
+
+    public Map<String, Object> getActiveSessionsForAdmin(String clientBaseUrl) {
+        List<TransferSession> sessions = transferSessionRepository
+                .findByExpiresAtAfterAndStatusNot(LocalDateTime.now(), TransferSessionStatus.EXPIRED);
+
+        String transferBase = resolveTransferBaseUrl(clientBaseUrl);
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (TransferSession session : sessions) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("session_id", session.getSessionId());
+            item.put("status", session.getStatus().name().toLowerCase());
+            item.put("expires_at", session.getExpiresAt());
+            item.put("downloads_count", session.getDownloadsCount());
+            item.put("max_downloads", session.getMaxDownloads());
+            item.put("transfer_url", transferBase + "/transfer/" + session.getSessionId());
+            item.put("file_name", session.getOriginalFileName());
+            item.put("created_by_user_id", session.getCreatedByUserId());
+            items.add(item);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("items", items);
+        data.put("count", items.size());
+        return data;
+    }
+
     @Scheduled(fixedDelayString = "${transfer.cleanup-interval-ms:300000}")
     @Transactional
     public void cleanupExpiredTransfers() {
@@ -540,6 +619,21 @@ public class TransferService {
 
     private boolean isExpired(TransferSession session) {
         return session.getExpiresAt() == null || session.getExpiresAt().isBefore(LocalDateTime.now());
+    }
+
+    private int resolveDefaultExpiryMinutes() {
+        Integer stored = appSettingService.getInt(AppSettingService.KEY_TRANSFER_DEFAULT_EXPIRY_MINUTES, defaultExpiryMinutes);
+        return stored == null ? defaultExpiryMinutes : stored;
+    }
+
+    private int resolveDefaultMaxDownloads() {
+        Integer stored = appSettingService.getInt(AppSettingService.KEY_TRANSFER_DEFAULT_MAX_DOWNLOADS, defaultMaxDownloads);
+        return stored == null ? defaultMaxDownloads : stored;
+    }
+
+    private long resolveTransferMaxFileSizeBytes() {
+        Long stored = appSettingService.getLong(AppSettingService.KEY_TRANSFER_MAX_FILE_SIZE_BYTES, maxFileSizeBytes);
+        return stored == null ? maxFileSizeBytes : stored;
     }
 
     private void expireSession(TransferSession session) {

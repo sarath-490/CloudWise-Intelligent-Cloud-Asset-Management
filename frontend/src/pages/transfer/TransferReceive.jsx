@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { LockKeyhole, Download, Clock3 } from 'lucide-react';
 import transferService from '../../services/transferService';
 import Button from '../../components/common/Button';
+import { useToast } from '../../context/ToastContext';
 
 const TransferReceive = () => {
   const { sessionId } = useParams();
@@ -12,6 +13,7 @@ const TransferReceive = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('idle');
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadSession = async () => {
@@ -20,11 +22,13 @@ const TransferReceive = () => {
         const res = await transferService.getSession(sessionId);
         if (!res.success) {
           setError(res.error || 'Session not available');
+          showToast({ type: 'error', message: res.error || 'Session not available.', duration: 7000 });
           return;
         }
         setSession(res.data);
       } catch (e) {
         setError(e?.response?.data?.error || 'Failed to fetch transfer session');
+        showToast({ type: 'error', message: e?.response?.data?.error || 'Failed to fetch transfer session.', duration: 7000 });
       } finally {
         setLoading(false);
       }
@@ -42,12 +46,15 @@ const TransferReceive = () => {
       const res = await transferService.verifyPin({ session_id: sessionId, pin });
       if (!res.success) {
         setError(res.error || 'PIN verification failed');
+        showToast({ type: 'error', message: res.error || 'PIN verification failed.', duration: 7000 });
         return;
       }
       setVerificationToken(res.data.verification_token);
       setStatus('verified');
+      showToast({ type: 'success', message: 'PIN verified. You can download now.', duration: 6000 });
     } catch (e) {
       setError(e?.response?.data?.error || 'PIN verification failed');
+      showToast({ type: 'error', message: e?.response?.data?.error || 'PIN verification failed.', duration: 7000 });
     } finally {
       setLoading(false);
     }
@@ -63,8 +70,10 @@ const TransferReceive = () => {
         fallback_file_name: session?.file_name,
       });
       setStatus('downloaded');
+      showToast({ type: 'success', message: 'Download started.', duration: 6000 });
     } catch (e) {
       setError(e?.message || e?.response?.data?.error || 'Failed to download file');
+      showToast({ type: 'error', message: e?.message || e?.response?.data?.error || 'Failed to download file.', duration: 7000 });
     } finally {
       setLoading(false);
     }

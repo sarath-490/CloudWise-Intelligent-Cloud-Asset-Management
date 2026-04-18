@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { QrCode, Link as LinkIcon, Copy, UploadCloud, ShieldCheck, DownloadCloud } from 'lucide-react';
 import transferService from '../../services/transferService';
 import Button from '../../components/common/Button';
+import { useToast } from '../../context/ToastContext';
 
 const TransferHub = () => {
   const [step, setStep] = useState(1);
@@ -11,6 +12,7 @@ const TransferHub = () => {
   const [error, setError] = useState('');
   const [activeTransfers, setActiveTransfers] = useState([]);
   const [loadingTransfers, setLoadingTransfers] = useState(false);
+  const { showToast } = useToast();
 
   const transferUrl = useMemo(() => session?.transfer_url || '', [session]);
   const autoDeleteAt = useMemo(() => session?.auto_delete_at || session?.expires_at || null, [session]);
@@ -33,6 +35,28 @@ const TransferHub = () => {
     loadMyTransfers();
   }, []);
 
+  const endSession = async (sessionId) => {
+    if (!sessionId) return;
+    if (!window.confirm('End this transfer session? This will revoke access.')) return;
+
+    try {
+      const res = await transferService.endSession({ session_id: sessionId });
+      if (!res.success) {
+        showToast({ type: 'error', message: res.error || 'Failed to end transfer session.', duration: 7000 });
+        return;
+      }
+
+      showToast({ type: 'success', message: 'Transfer session ended.', duration: 6000 });
+      setActiveTransfers((prev) => prev.filter((item) => item.session_id !== sessionId));
+      if (session?.session_id === sessionId) {
+        setSession(null);
+        setStep(1);
+      }
+    } catch (e) {
+      showToast({ type: 'error', message: e?.response?.data?.error || 'Failed to end transfer session.', duration: 7000 });
+    }
+  };
+
   const createSession = async () => {
     try {
       setLoading(true);
@@ -40,13 +64,16 @@ const TransferHub = () => {
       const res = await transferService.createSession({ max_downloads: 1, expiry_minutes: 10 });
       if (!res.success) {
         setError(res.error || 'Failed to create session');
+        showToast({ type: 'error', message: res.error || 'Failed to create transfer session.', duration: 7000 });
         return;
       }
       setSession(res.data);
       setStep(2);
       loadMyTransfers();
+      showToast({ type: 'success', message: 'Transfer session created.', duration: 6000 });
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to create session');
+      showToast({ type: 'error', message: e?.response?.data?.error || 'Failed to create transfer session.', duration: 7000 });
     } finally {
       setLoading(false);
     }
@@ -68,6 +95,7 @@ const TransferHub = () => {
 
       if (!uploadMeta.success) {
         setError(uploadMeta.error || 'Could not prepare upload');
+        showToast({ type: 'error', message: uploadMeta.error || 'Could not prepare upload.', duration: 7000 });
         return;
       }
 
@@ -85,14 +113,17 @@ const TransferHub = () => {
 
       if (!completed.success) {
         setError(completed.error || 'Upload completion failed');
+        showToast({ type: 'error', message: completed.error || 'Upload completion failed.', duration: 7000 });
         return;
       }
 
       setSession((prev) => ({ ...prev, ...completed.data }));
       setStep(3);
       loadMyTransfers();
+      showToast({ type: 'success', message: 'Transfer ready to share.', duration: 7000 });
     } catch (e) {
       setError(e?.response?.data?.error || e?.message || 'Upload failed');
+      showToast({ type: 'error', message: e?.response?.data?.error || e?.message || 'Upload failed.', duration: 7000 });
     } finally {
       setLoading(false);
     }
@@ -101,6 +132,7 @@ const TransferHub = () => {
   const copyText = async (text) => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
+    showToast({ type: 'success', message: 'Link copied to clipboard.', duration: 4000 });
   };
 
   return (
@@ -182,6 +214,9 @@ const TransferHub = () => {
                 <Button variant="secondary" onClick={() => copyText(transferUrl)}>
                   <Copy size={16} className="mr-2" /> Copy Link
                 </Button>
+                <Button variant="secondary" onClick={() => endSession(session.session_id)}>
+                  End Session
+                </Button>
                 <a href={transferUrl} target="_blank" rel="noreferrer" className="inline-flex">
                   <Button variant="secondary">
                     <LinkIcon size={16} className="mr-2" /> Open
@@ -239,6 +274,9 @@ const TransferHub = () => {
               <div className="flex gap-2 pt-1">
                 <Button variant="secondary" onClick={() => copyText(item.transfer_url)}>
                   <Copy size={14} className="mr-1" /> Copy Link
+                </Button>
+                <Button variant="secondary" onClick={() => endSession(item.session_id)}>
+                  End Session
                 </Button>
                 <a href={item.transfer_url} target="_blank" rel="noreferrer" className="inline-flex">
                   <Button variant="secondary">

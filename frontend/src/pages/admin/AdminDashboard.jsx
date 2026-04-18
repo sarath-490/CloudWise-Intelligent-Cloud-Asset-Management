@@ -1,22 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Users,
     HardDrive,
     Activity,
     ShieldCheck,
     UserPlus,
-    Clock,
     BarChart3,
     Database,
     Lock,
-    ArrowUpRight,
     Search,
     MoreVertical,
-    CheckCircle2
+    CheckCircle2,
+    Filter,
+    SlidersHorizontal,
+    Settings,
+    Power,
+    Server,
+    XCircle
 } from 'lucide-react';
 import Button from '../../components/common/Button';
-
-import api from '../../services/api';
+import { adminService } from '../../services/adminService';
+import { useToast } from '../../context/ToastContext';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
@@ -29,22 +33,170 @@ const AdminDashboard = () => {
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [transfers, setTransfers] = useState([]);
+    const [settings, setSettings] = useState({
+        uploadMaxFileSizeBytes: 104857600,
+        transferDefaultExpiryMinutes: 10,
+        transferDefaultMaxDownloads: 1,
+        transferMaxFileSizeBytes: 52428800,
+        defaultUserStorageLimitBytes: 1073741824,
+    });
+    const [savingSettings, setSavingSettings] = useState(false);
+    const [updatingUserId, setUpdatingUserId] = useState(null);
+    const [pendingLimits, setPendingLimits] = useState({});
+    const { showToast } = useToast();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All');
+    const [sortKey, setSortKey] = useState('storage');
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchData = async () => {
             try {
-                const response = await api.get('/admin/stats');
-                setStats(response.data.stats);
-                setUsers(response.data.users);
+                setLoading(true);
+                setError('');
+                const [statsRes, usersRes, settingsRes, transfersRes] = await Promise.all([
+                    adminService.getStats(),
+                    adminService.getUsers(),
+                    adminService.getSettings(),
+                    adminService.getTransfers(),
+                ]);
+
+                setStats(statsRes.stats || stats);
+                setUsers(usersRes.items || []);
+                setSettings({
+                    uploadMaxFileSizeBytes: settingsRes.uploadMaxFileSizeBytes ?? settings.uploadMaxFileSizeBytes,
+                    transferDefaultExpiryMinutes: settingsRes.transferDefaultExpiryMinutes ?? settings.transferDefaultExpiryMinutes,
+                    transferDefaultMaxDownloads: settingsRes.transferDefaultMaxDownloads ?? settings.transferDefaultMaxDownloads,
+                    transferMaxFileSizeBytes: settingsRes.transferMaxFileSizeBytes ?? settings.transferMaxFileSizeBytes,
+                    defaultUserStorageLimitBytes: settingsRes.defaultUserStorageLimitBytes ?? null,
+                });
+                setTransfers(transfersRes.items || []);
             } catch (error) {
                 console.error("Failed to fetch admin statistics", error);
+                setError('Unable to load admin data. Please try again.');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchStats();
+        fetchData();
     }, []);
+
+    const filteredUsers = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        let next = users;
+        if (query) {
+            next = next.filter((u) =>
+                String(u.name || '').toLowerCase().includes(query) ||
+                String(u.email || '').toLowerCase().includes(query)
+            );
+        }
+        if (roleFilter !== 'All') {
+            next = next.filter((u) => String(u.role || '').toUpperCase() === roleFilter);
+        }
+
+        const sorter = {
+            storage: (a, b) => (b.storageBytes || 0) - (a.storageBytes || 0),
+            files: (a, b) => (b.fileCount || 0) - (a.fileCount || 0),
+            newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+            name: (a, b) => String(a.name || '').localeCompare(String(b.name || '')),
+        };
+
+        return [...next].sort(sorter[sortKey] || sorter.storage);
+    }, [users, searchQuery, roleFilter, sortKey]);
+
+    const formatBytes = (bytes) => {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+    };
+
+    const handleToggleUser = async (user) => {
+        if (!user) return;
+        setUpdatingUserId(user.id);
+        try {
+            const res = await adminService.updateUserStatus({ id: user.id, active: !user.active });
+            setUsers((prev) => prev.map((u) => (u.id === user.id ? {
+                ...u,
+                active: res.active,
+                status: res.active ? 'Active' : 'Disabled',
+            } : u)));
+            showToast({ type: 'success', message: user.active ? 'User deactivated.' : 'User reactivated.', duration: 6000 });
+        } catch (e) {
+            showToast({ type: 'error', message: e?.response?.data?.message || 'Failed to update user status.', duration: 7000 });
+        } finally {
+            setUpdatingUserId(null);
+        }
+    };
+
+    const handleUpdateStorageLimit = async (user) => {
+        if (!user) return;
+        const raw = pendingLimits[user.id];
+        const value = raw === '' || raw == null ? null : Number(raw);
+        if (value != null && Number.isNaN(value)) {
+            showToast({ type: 'error', message: 'Storage limit must be a number (GB).', duration: 6000 });
+            return;
+        }
+
+        const bytes = value == null ? 0 : Math.max(0, Math.round(value * 1024 * 1024 * 1024));
+        setUpdatingUserId(user.id);
+        try {
+            const res = await adminService.updateUserStorageLimit({ id: user.id, storageLimitBytes: bytes });
+            setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, storageLimitBytes: res.storageLimitBytes } : u)));
+            setPendingLimits((prev) => ({ ...prev, [user.id]: '' }));
+            showToast({ type: 'success', message: 'Storage limit updated.', duration: 6000 });
+        } catch (e) {
+            showToast({ type: 'error', message: e?.response?.data?.message || 'Failed to update storage limit.', duration: 7000 });
+        } finally {
+            setUpdatingUserId(null);
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        setSavingSettings(true);
+        try {
+            const payload = {
+                uploadMaxFileSizeBytes: Number(settings.uploadMaxFileSizeBytes),
+                transferDefaultExpiryMinutes: Number(settings.transferDefaultExpiryMinutes),
+                transferDefaultMaxDownloads: Number(settings.transferDefaultMaxDownloads),
+                transferMaxFileSizeBytes: Number(settings.transferMaxFileSizeBytes),
+                defaultUserStorageLimitBytes: settings.defaultUserStorageLimitBytes == null || settings.defaultUserStorageLimitBytes === ''
+                    ? 0
+                    : Number(settings.defaultUserStorageLimitBytes),
+            };
+            const res = await adminService.updateSettings(payload);
+            setSettings({
+                uploadMaxFileSizeBytes: res.uploadMaxFileSizeBytes ?? settings.uploadMaxFileSizeBytes,
+                transferDefaultExpiryMinutes: res.transferDefaultExpiryMinutes ?? settings.transferDefaultExpiryMinutes,
+                transferDefaultMaxDownloads: res.transferDefaultMaxDownloads ?? settings.transferDefaultMaxDownloads,
+                transferMaxFileSizeBytes: res.transferMaxFileSizeBytes ?? settings.transferMaxFileSizeBytes,
+                defaultUserStorageLimitBytes: res.defaultUserStorageLimitBytes ?? null,
+            });
+            showToast({ type: 'success', message: 'Settings updated.', duration: 6000 });
+        } catch (e) {
+            showToast({ type: 'error', message: e?.response?.data?.message || 'Failed to update settings.', duration: 7000 });
+        } finally {
+            setSavingSettings(false);
+        }
+    };
+
+    const handleEndTransfer = async (sessionId) => {
+        if (!sessionId) return;
+        if (!window.confirm('End this transfer session? This will revoke access.')) return;
+        try {
+            const res = await adminService.endTransfer({ session_id: sessionId });
+            if (res?.error) {
+                throw new Error(res.error);
+            }
+            setTransfers((prev) => prev.filter((item) => item.session_id !== sessionId));
+            showToast({ type: 'success', message: 'Transfer session ended.', duration: 6000 });
+        } catch (e) {
+            showToast({ type: 'error', message: e?.response?.data?.message || e?.message || 'Failed to end transfer session.', duration: 7000 });
+        }
+    };
 
     if (loading) {
         return (
@@ -76,12 +228,19 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
+            {error && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 px-6 py-4 font-semibold text-sm">
+                    {error}
+                </div>
+            )}
+
             {/* Admin Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 {[
-                    { title: 'Registered Node Users', value: stats.totalUsers, icon: <Users />, trend: '+12% month', color: 'text-blue-500' },
-                    { title: 'S3 Ingestion Load', value: stats.totalStorage, icon: <HardDrive />, trend: `${stats.storageLimit} max`, color: 'text-indigo-500' },
-                    { title: 'Concurrent Sessions', value: stats.activeUsers, icon: <Activity />, trend: 'System stable', color: 'text-emerald-500' },
+                    { title: 'Registered Users', value: stats.totalUsers, icon: <Users />, trend: 'All time', color: 'text-blue-500' },
+                    { title: 'Total Storage', value: stats.totalStorage, icon: <HardDrive />, trend: `${stats.storageLimit} max`, color: 'text-indigo-500' },
+                    { title: 'Total Files', value: stats.totalFiles || 0, icon: <Database />, trend: 'All assets', color: 'text-emerald-500' },
+                    { title: 'Concurrent Sessions', value: stats.activeUsers, icon: <Activity />, trend: 'System stable', color: 'text-amber-500' },
                     { title: 'Core Hub Uptime', value: stats.systemUptime, icon: <BarChart3 />, trend: '99.9% SLA', color: 'text-purple-500' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all">
@@ -99,19 +258,46 @@ const AdminDashboard = () => {
                 {/* User Management Table */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
                                 <UserPlus size={24} className="text-indigo-500" />
                                 User Governance
                             </h2>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <div className="relative">
                                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Search users..."
                                         className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-10 pr-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
                                     />
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
+                                    <Filter size={14} className="text-slate-400" />
+                                    <select
+                                        value={roleFilter}
+                                        onChange={(e) => setRoleFilter(e.target.value)}
+                                        className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    >
+                                        <option value="All">All roles</option>
+                                        <option value="ADMIN">Admin</option>
+                                        <option value="USER">User</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
+                                    <SlidersHorizontal size={14} className="text-slate-400" />
+                                    <select
+                                        value={sortKey}
+                                        onChange={(e) => setSortKey(e.target.value)}
+                                        className="bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    >
+                                        <option value="storage">Sort: Storage</option>
+                                        <option value="files">Sort: Files</option>
+                                        <option value="newest">Sort: Newest</option>
+                                        <option value="name">Sort: Name</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -124,38 +310,94 @@ const AdminDashboard = () => {
                                         <th className="px-8 py-4">Consumption</th>
                                         <th className="px-8 py-4">Creation Date</th>
                                         <th className="px-8 py-4">Status</th>
-                                        <th className="px-8 py-4 text-center">Protocol</th>
+                                        <th className="px-8 py-4">Access</th>
+                                        <th className="px-8 py-4 text-center">Controls</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                    {users.map((u) => (
-                                        <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors group">
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 font-black text-xs">
-                                                        {u.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-900 dark:text-white">{u.name}</p>
-                                                        <p className="text-xs text-slate-500">{u.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5 text-sm font-bold text-slate-700 dark:text-slate-300">{u.storage}</td>
-                                            <td className="px-8 py-5 text-sm font-medium text-slate-500">{u.joined}</td>
-                                            <td className="px-8 py-5">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${u.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-                                                    }`}>
-                                                    {u.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-8 py-5 text-center">
-                                                <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400">
-                                                    <MoreVertical size={16} />
-                                                </button>
+                                    {filteredUsers.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-8 py-10 text-center text-sm font-semibold text-slate-500">
+                                                No users match the current filters.
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : (
+                                        filteredUsers.map((u) => (
+                                            <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors group">
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 font-black text-xs">
+                                                            {String(u.name || 'U').charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-black text-slate-900 dark:text-white">{u.name}</p>
+                                                            <p className="text-xs text-slate-500">{u.email}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="text-xs font-bold text-slate-500 mb-2">{u.storage}</div>
+                                                    <div className="h-2 w-40 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-indigo-500 rounded-full"
+                                                            style={{ width: `${Math.min(100, Math.round(((u.storageBytes || 0) / Math.max(stats.totalStorageBytes || 1, 1)) * 100))}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <div className="mt-2 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
+                                                        {u.fileCount || 0} files
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-sm font-medium text-slate-500">{u.joined}</td>
+                                                <td className="px-8 py-5">
+                                                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${u.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
+                                                        }`}>
+                                                        {u.status}
+                                                    </span>
+                                                    <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                        {u.role || 'USER'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => handleToggleUser(u)}
+                                                            disabled={updatingUserId === u.id}
+                                                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${u.active ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'}`}
+                                                        >
+                                                            {u.active ? <Power size={12} /> : <XCircle size={12} />}
+                                                            {u.active ? 'Active' : 'Disabled'}
+                                                        </button>
+                                                        <div className="text-[10px] font-bold text-slate-400">
+                                                            Limit: {u.storageLimitBytes ? formatBytes(u.storageLimitBytes) : 'Unlimited'}
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 flex items-center gap-2">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            placeholder="Limit (GB)"
+                                                            value={pendingLimits[u.id] ?? ''}
+                                                            onChange={(e) => setPendingLimits((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                                                            className="w-28 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-xs font-semibold"
+                                                        />
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="small"
+                                                            onClick={() => handleUpdateStorageLimit(u)}
+                                                            disabled={updatingUserId === u.id}
+                                                        >
+                                                            Save
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-center">
+                                                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400" title="More options">
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -204,6 +446,131 @@ const AdminDashboard = () => {
                         </p>
                         <Button variant="secondary" className="w-full bg-white text-indigo-600 border-none font-black text-xs uppercase tracking-widest rounded-2xl h-12">
                             Generate Audit Report
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[40px] shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <Server size={18} className="text-indigo-500" />
+                            Active Transfers
+                        </h3>
+                        <span className="text-xs font-bold text-slate-400">{transfers.length} sessions</span>
+                    </div>
+
+                    {transfers.length === 0 ? (
+                        <div className="text-sm text-slate-500">No active transfer sessions found.</div>
+                    ) : (
+                        <div className="space-y-3">
+                            {transfers.slice(0, 8).map((item) => (
+                                <div key={item.session_id} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs font-black uppercase tracking-widest text-slate-400">Session</div>
+                                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 break-all">{item.session_id}</div>
+                                        </div>
+                                        <Button variant="secondary" size="small" onClick={() => handleEndTransfer(item.session_id)}>
+                                            End
+                                        </Button>
+                                    </div>
+                                    <div className="mt-2 text-xs text-slate-500">
+                                        Status: {item.status} • Expires: {new Date(item.expires_at).toLocaleString()}
+                                    </div>
+                                    <div className="mt-1 text-xs text-slate-500">
+                                        Downloads: {item.downloads_count}/{item.max_downloads} • User ID: {item.created_by_user_id}
+                                    </div>
+                                </div>
+                            ))}
+                            {transfers.length > 8 && (
+                                <div className="text-xs text-slate-400 font-bold">Showing 8 of {transfers.length} active sessions.</div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[40px] shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <Settings size={18} className="text-amber-500" />
+                            Platform Settings
+                        </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">Max upload size (MB)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={Math.round((settings.uploadMaxFileSizeBytes || 0) / (1024 * 1024))}
+                                onChange={(e) => setSettings((prev) => ({
+                                    ...prev,
+                                    uploadMaxFileSizeBytes: Number(e.target.value) * 1024 * 1024,
+                                }))}
+                                className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-semibold"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-500">Transfer expiry (minutes)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={settings.transferDefaultExpiryMinutes}
+                                    onChange={(e) => setSettings((prev) => ({
+                                        ...prev,
+                                        transferDefaultExpiryMinutes: e.target.value,
+                                    }))}
+                                    className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-semibold"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-500">Max downloads</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={settings.transferDefaultMaxDownloads}
+                                    onChange={(e) => setSettings((prev) => ({
+                                        ...prev,
+                                        transferDefaultMaxDownloads: e.target.value,
+                                    }))}
+                                    className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-semibold"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">Transfer max file size (MB)</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={Math.round((settings.transferMaxFileSizeBytes || 0) / (1024 * 1024))}
+                                onChange={(e) => setSettings((prev) => ({
+                                    ...prev,
+                                    transferMaxFileSizeBytes: Number(e.target.value) * 1024 * 1024,
+                                }))}
+                                className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-semibold"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">Default user storage limit (GB)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="0 = unlimited"
+                                value={settings.defaultUserStorageLimitBytes == null ? '' : Math.round(settings.defaultUserStorageLimitBytes / (1024 * 1024 * 1024))}
+                                onChange={(e) => setSettings((prev) => ({
+                                    ...prev,
+                                    defaultUserStorageLimitBytes: e.target.value === '' ? null : Number(e.target.value) * 1024 * 1024 * 1024,
+                                }))}
+                                className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-sm font-semibold"
+                            />
+                        </div>
+
+                        <Button variant="primary" onClick={handleSaveSettings} disabled={savingSettings}>
+                            {savingSettings ? 'Saving...' : 'Save Settings'}
                         </Button>
                     </div>
                 </div>

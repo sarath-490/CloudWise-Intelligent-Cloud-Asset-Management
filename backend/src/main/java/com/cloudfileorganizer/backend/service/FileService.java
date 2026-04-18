@@ -3,6 +3,7 @@ package com.cloudfileorganizer.backend.service;
 import com.cloudfileorganizer.backend.model.FileMetadata;
 import com.cloudfileorganizer.backend.model.User;
 import com.cloudfileorganizer.backend.repository.FileRepository;
+import com.cloudfileorganizer.backend.service.AppSettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,9 @@ public class FileService {
     @Autowired
     private AiService aiService;
 
+    @Autowired
+    private AppSettingService appSettingService;
+
     /**
      * Upload file to S3 and save metadata
      */
@@ -37,8 +41,22 @@ public class FileService {
             throw new IllegalArgumentException("File is empty");
         }
 
-        if (file.getSize() > 100 * 1024 * 1024) { 
-            throw new IllegalArgumentException("File size exceeds 100MB limit");
+        long uploadMaxBytes = appSettingService.getLong(
+                AppSettingService.KEY_UPLOAD_MAX_FILE_SIZE_BYTES,
+                100L * 1024 * 1024
+        );
+
+        if (uploadMaxBytes > 0 && file.getSize() > uploadMaxBytes) {
+            throw new IllegalArgumentException("File size exceeds upload limit");
+        }
+
+        Long storageLimitBytes = user.getStorageLimitBytes();
+        if (storageLimitBytes != null && storageLimitBytes > 0) {
+            Long usedBytes = fileRepository.getTotalStorageSizeByUser(user);
+            long nextTotal = (usedBytes == null ? 0L : usedBytes) + file.getSize();
+            if (nextTotal > storageLimitBytes) {
+                throw new IllegalArgumentException("Storage limit exceeded for this account");
+            }
         }
 
         // Normalize or infer category

@@ -14,7 +14,7 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
     const [toasts, setToasts] = useState([]);
 
-    const showToast = useCallback(({ type = 'info', message, duration = 3000 }) => {
+    const showToast = useCallback(({ type = 'info', message, duration = 5000 }) => {
         const id = Date.now().toString();
         setToasts((prev) => [...prev, { id, type, message }]);
 
@@ -32,7 +32,7 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+            <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
                 {toasts.map((toast) => (
                     <ToastItem key={toast.id} toast={toast} onRemove={() => removeToast(toast.id)} />
                 ))}

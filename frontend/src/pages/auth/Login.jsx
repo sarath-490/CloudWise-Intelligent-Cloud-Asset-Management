@@ -4,21 +4,25 @@ import { useAuth } from '../../context/AuthContext';
 import { Cloud, ArrowRight, Shield, Zap, Lock, Mail } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import { useToast } from '../../context/ToastContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    remember: false,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === 'checkbox' ? checked : value,
     });
     setError('');
   };
@@ -28,12 +32,14 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.email, formData.password, { remember: formData.remember });
 
     if (result.success) {
-      navigate('/dashboard');
+      showToast({ type: 'success', message: 'Signed in successfully.', duration: 6000 });
+      setTimeout(() => navigate('/dashboard'), 800);
     } else {
       setError(result.error || 'Invalid email or password');
+      showToast({ type: 'error', message: result.error || 'Login failed. Please check your credentials.', duration: 6000 });
     }
 
     setLoading(false);
@@ -123,7 +129,7 @@ const Login = () => {
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                <Link to="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Forgot password?</Link>
+                <Link to="/forgot-password" className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400">Forgot password?</Link>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -142,7 +148,14 @@ const Login = () => {
             </div>
 
             <div className="flex items-center gap-2 pt-1 pb-2">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+              <input
+                type="checkbox"
+                id="remember"
+                name="remember"
+                checked={formData.remember}
+                onChange={handleChange}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
               <label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer">Stay signed in</label>
             </div>
 

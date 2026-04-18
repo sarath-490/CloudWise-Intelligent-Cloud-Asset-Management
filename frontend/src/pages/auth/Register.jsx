@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Cloud, ArrowRight, Zap, User, Mail, Lock, CheckCircle } from 'lucide-react';
 import Button from '../../components/common/Button';
+import { useToast } from '../../context/ToastContext';
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,9 +44,11 @@ const Register = () => {
     });
 
     if (result.success) {
-      navigate('/dashboard');
+      showToast({ type: 'success', message: 'Account created. Welcome!', duration: 8000 });
+      setTimeout(() => navigate('/dashboard'), 1000);
     } else {
       setError(result.error || 'Registration failed');
+      showToast({ type: 'error', message: result.error || 'Registration failed. Please try again.', duration: 6000 });
     }
 
     setLoading(false);
