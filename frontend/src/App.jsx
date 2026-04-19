@@ -7,6 +7,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import AiChatInterface from './components/ai/AiChatInterface';
 import Sidebar from './components/layout/Sidebar';
 import Navbar from './components/layout/Navbar';
+import ScrollToTop from './components/layout/ScrollToTop';
 import Home from './pages/Home';
 import Dashboard from './pages/dashboard/Dashboard';
 import Analytics from './pages/dashboard/Analytics';
@@ -106,6 +107,7 @@ function App() {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               <Route
                 path="/"

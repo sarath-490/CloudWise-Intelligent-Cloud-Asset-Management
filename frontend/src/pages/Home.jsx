@@ -200,7 +200,7 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative pt-16 sm:pt-24 pb-16 sm:pb-20 lg:pt-32 lg:pb-28 overflow-hidden">
+      <main className="relative pt-[96px] sm:pt-24 pb-16 sm:pb-20 lg:pt-32 lg:pb-28 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 mb-5 sm:mb-6 hover:scale-105 transition-transform cursor-pointer">
             <Sparkles size={16} className="text-indigo-600 animate-pulse" />

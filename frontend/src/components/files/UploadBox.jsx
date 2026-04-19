@@ -126,15 +126,20 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
       </div>
 
       {selectedFiles.length > 0 && (
-        <div ref={fileListRef} className="mt-12 pt-10 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-8">
+        <div ref={fileListRef} className="mt-8 sm:mt-12 pt-8 sm:pt-10 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
-              <span className="text-[13px] font-black text-slate-900 dark:text-white uppercase tracking-widest">
+              <span className="text-[12px] sm:text-[13px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em] sm:tracking-widest">
                 Selected Files ({selectedFiles.length})
               </span>
             </div>
-            <Button variant="primary" size="medium" onClick={handleUpload} className="px-8 h-12 rounded-xl font-black text-[13px] uppercase tracking-wider shadow-lg shadow-indigo-100 dark:shadow-none">
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={handleUpload}
+              className="w-full sm:w-auto px-5 sm:px-8 h-10 sm:h-12 rounded-xl font-black text-[12px] sm:text-[13px] uppercase tracking-wider shadow-lg shadow-indigo-100 dark:shadow-none"
+            >
               <Upload size={18} className="mr-2" />
               Upload Files
             </Button>

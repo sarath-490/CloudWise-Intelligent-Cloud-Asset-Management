@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { Cloud, Lock, Mail, User, Shield, Zap, CheckCircle, XCircle } from 'lucide-react';
 import Button from '../../components/common/Button';
 
@@ -9,6 +10,7 @@ const AuthPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { login, register } = useAuth();
+    const { showToast } = useToast();
 
     // Determine initial state from URL
     const initialIsLogin = location.pathname !== '/register';
@@ -103,9 +105,16 @@ const AuthPage = () => {
         }
 
         if (result.success) {
+            showToast({
+                type: 'success',
+                message: isLogin ? 'Login successful.' : 'Account created successfully.',
+                duration: 6000
+            });
             navigate('/dashboard');
         } else {
-            setError(result.error || (isLogin ? 'Invalid email or password' : 'Registration failed'));
+            const message = result.error || (isLogin ? 'Invalid email or password' : 'Registration failed');
+            setError(message);
+            showToast({ type: 'error', message, duration: 6000 });
         }
 
         setLoading(false);
