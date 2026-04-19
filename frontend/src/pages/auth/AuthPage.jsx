@@ -13,7 +13,11 @@ const AuthPage = () => {
     // Determine initial state from URL
     const initialIsLogin = location.pathname !== '/register';
     const [isLogin, setIsLogin] = useState(initialIsLogin);
-    const [isMobile, setIsMobile] = useState(false);
+    const getInitialIsMobile = () => {
+        if (typeof window === 'undefined') return false;
+        return window.matchMedia('(max-width: 1024px)').matches;
+    };
+    const [isMobile, setIsMobile] = useState(getInitialIsMobile);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -46,7 +50,6 @@ const AuthPage = () => {
         if (typeof window === 'undefined') return;
         const media = window.matchMedia('(max-width: 1024px)');
         const handleChange = () => setIsMobile(media.matches);
-        handleChange();
 
         if (media.addEventListener) {
             media.addEventListener('change', handleChange);
@@ -215,7 +218,7 @@ const AuthPage = () => {
 
                 {/* Animated Form Container (White Panel) */}
                 <motion.div
-                    className="auth-form-panel relative lg:absolute top-0 w-full lg:w-1/2 min-h-screen lg:h-full bg-white dark:bg-slate-900 shadow-2xl z-20 overflow-y-auto flex items-center justify-center p-6 sm:p-8 transition-colors duration-300"
+                    className="auth-form-panel relative lg:absolute top-0 w-full lg:w-1/2 min-h-screen lg:h-full bg-white dark:bg-slate-950 lg:dark:bg-slate-900 shadow-none lg:shadow-2xl z-20 overflow-y-auto flex items-center justify-center p-6 sm:p-8 transition-colors duration-300"
                     initial={false}
                     animate={isLogin ? "login" : "register"}
                     variants={formPanelVariants}

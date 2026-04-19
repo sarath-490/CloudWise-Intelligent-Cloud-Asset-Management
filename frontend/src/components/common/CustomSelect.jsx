@@ -31,10 +31,10 @@ const CustomSelect = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-4 py-3 rounded-2xl border border-transparent focus:border-indigo-500/50 transition-all w-full text-left outline-none min-w-0 sm:min-w-[140px] max-w-full"
+                className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl border border-transparent focus:border-indigo-500/50 transition-all w-full text-left outline-none min-w-0 sm:min-w-[140px] max-w-full"
             >
                 {Icon && <Icon size={18} className="text-slate-400" />}
-                <span className="flex-1 text-slate-600 dark:text-slate-300 font-bold text-sm truncate">
+                <span className="flex-1 text-slate-600 dark:text-slate-300 font-bold text-xs sm:text-sm truncate">
                     {selectedOption.label}
                 </span>
                 <motion.div

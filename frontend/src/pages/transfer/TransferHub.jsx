@@ -17,6 +17,26 @@ const TransferHub = () => {
   const transferUrl = useMemo(() => session?.transfer_url || '', [session]);
   const autoDeleteAt = useMemo(() => session?.auto_delete_at || session?.expires_at || null, [session]);
 
+  const formatIst = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    try {
+      return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      });
+    } catch {
+      return date.toLocaleString();
+    }
+  };
+
   const loadMyTransfers = async () => {
     try {
       setLoadingTransfers(true);
@@ -136,15 +156,15 @@ const TransferHub = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 md:p-8 shadow-sm">
+    <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 px-1 sm:px-0">
+      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 md:p-8 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
             <ShieldCheck className="text-sky-600 dark:text-sky-300" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Secure Transfer</h1>
-            <p className="text-slate-600 dark:text-slate-400 font-medium mt-1">Send a file to another device with QR/link + mandatory PIN verification.</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">Secure Transfer</h1>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium mt-1">Send a file to another device with QR/link + mandatory PIN verification.</p>
           </div>
         </div>
       </div>
@@ -153,11 +173,11 @@ const TransferHub = () => {
         <div className="p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-semibold">{error}</div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[1, 2, 3].map((n) => (
           <div
             key={n}
-            className={`rounded-2xl p-4 border ${step >= n ? 'border-sky-300 bg-sky-50 dark:bg-sky-900/10 dark:border-sky-700' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}`}
+            className={`rounded-2xl p-3 sm:p-4 border ${step >= n ? 'border-sky-300 bg-sky-50 dark:bg-sky-900/10 dark:border-sky-700' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}`}
           >
             <div className="text-xs font-black uppercase tracking-wider text-slate-500">Step {n}</div>
             <div className="font-bold text-slate-900 dark:text-white mt-1">{n === 1 ? 'Create session' : n === 2 ? 'Upload file' : 'Share + Receive'}</div>
@@ -165,7 +185,7 @@ const TransferHub = () => {
         ))}
       </div>
 
-      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 md:p-8 shadow-sm space-y-5">
+      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 md:p-8 shadow-sm space-y-5">
         {step === 1 && (
           <div className="space-y-4">
             <p className="text-slate-600 dark:text-slate-400">Create a one-time secure transfer session.</p>
@@ -182,7 +202,7 @@ const TransferHub = () => {
             <p className="text-xs text-amber-700 dark:text-amber-300">Never include this PIN in messages containing the transfer link.</p>
             {autoDeleteAt && (
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                This transfer is auto-deleted from AWS S3 at {new Date(autoDeleteAt).toLocaleString()} (from backend session expiry).
+                This transfer is auto-deleted from AWS S3 at {formatIst(autoDeleteAt)} (IST).
               </p>
             )}
           </div>
@@ -225,7 +245,7 @@ const TransferHub = () => {
               </div>
               <p className="text-xs text-slate-500">Recipient opens link, enters PIN, and downloads securely.</p>
               {autoDeleteAt && (
-                <p className="text-xs text-slate-500">Auto cleanup: backend expires the session and then removes file + session at {new Date(autoDeleteAt).toLocaleString()}.</p>
+                <p className="text-xs text-slate-500">Auto cleanup: backend expires the session and then removes file + session at {formatIst(autoDeleteAt)} (IST).</p>
               )}
             </div>
 

@@ -28,6 +28,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/transfer/*").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/transfer/verify-pin").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/transfer/download", "/api/transfer/download/stream").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

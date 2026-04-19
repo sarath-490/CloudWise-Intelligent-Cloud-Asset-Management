@@ -189,71 +189,74 @@ const MyFiles = () => {
           </p>
         </div>
         <Link to="/upload">
-          <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 rounded-2xl h-12 px-6 font-bold w-full sm:w-auto">
-            <Plus size={20} className="mr-2" /> Upload File
+          <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 rounded-2xl h-11 sm:h-12 px-5 sm:px-6 font-bold w-full sm:w-auto whitespace-nowrap text-sm sm:text-base">
+            <Plus size={18} className="mr-2" /> Upload File
           </Button>
         </Link>
       </div>
 
       {/* Controls Bar */}
-      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="relative flex-1 group w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+      <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 items-stretch lg:items-center justify-between bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="relative flex-1 group w-full flex flex-col gap-2 sm:gap-4">
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search my files... (Press '/')"
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none text-slate-900 dark:text-white font-semibold text-sm"
+              className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none text-slate-900 dark:text-white font-semibold text-xs sm:text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <CustomSelect
-            options={[
-              { label: 'All Types', value: 'All' },
-              ...categories.map(cat => ({ label: `${cat.category} (${cat.count})`, value: cat.category }))
-            ]}
-            value={selectedCategory}
-            onChange={setSelectedCategory}
-            icon={Filter}
-            className="w-full sm:w-56"
-          />
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3 lg:gap-4">
+            <CustomSelect
+              options={[
+                { label: 'All Types', value: 'All' },
+                ...categories.map(cat => ({ label: `${cat.category} (${cat.count})`, value: cat.category }))
+              ]}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              icon={Filter}
+              className="w-full sm:w-[170px] lg:w-[190px]"
+            />
 
-          <CustomSelect
-            options={[
-              { label: 'All Categories', value: 'All' },
-              ...aiCategories.map(cat => ({ label: `${cat.category} (${cat.count})`, value: cat.category }))
-            ]}
-            value={selectedAiCategory}
-            onChange={setSelectedAiCategory}
-            icon={Binary}
-            className="w-full sm:w-56"
-          />
+            <CustomSelect
+              options={[
+                { label: 'All Categories', value: 'All' },
+                ...aiCategories.map(cat => ({ label: `${cat.category} (${cat.count})`, value: cat.category }))
+              ]}
+              value={selectedAiCategory}
+              onChange={setSelectedAiCategory}
+              icon={Binary}
+              className="w-full sm:w-[190px] lg:w-[210px]"
+            />
 
-          <CustomSelect
-            options={aiTagOptions}
-            value={selectedTag}
-            onChange={setSelectedTag}
-            icon={Database}
-            className="w-full sm:w-56"
-          />
+            <CustomSelect
+              options={aiTagOptions}
+              value={selectedTag}
+              onChange={setSelectedTag}
+              icon={Database}
+              className="w-full sm:w-[180px] lg:w-[200px]"
+            />
+
+            <CustomSelect
+              options={[
+                { label: 'Newest First', value: 'newest' },
+                { label: 'Oldest First', value: 'oldest' },
+                { label: 'Name (A-Z)', value: 'name' },
+                { label: 'Size', value: 'size' }
+              ]}
+              value={sortBy}
+              onChange={setSortBy}
+              icon={ArrowUpDown}
+              className="w-full sm:w-[170px] lg:w-[190px]"
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
-          <CustomSelect
-            options={[
-              { label: 'Newest First', value: 'newest' },
-              { label: 'Oldest First', value: 'oldest' },
-              { label: 'Name (A-Z)', value: 'name' },
-              { label: 'Size', value: 'size' }
-            ]}
-            value={sortBy}
-            onChange={setSortBy}
-            icon={ArrowUpDown}
-            className="w-full sm:w-56"
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full lg:w-auto">
 
           <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700">
           </div>
