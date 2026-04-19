@@ -37,7 +37,12 @@ const AiChatInterface = () => {
             const aiMessage = { role: 'model', content: aiResponse };
             setMessages(prev => [...prev, aiMessage]);
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'model', content: 'Sorry, something went wrong. Please make sure the AI service is configured and try again.' }]);
+            const message = error?.response?.data?.message
+                || (error?.response?.status === 401
+                    ? 'Please sign in to use the AI assistant.'
+                    : null)
+                || 'Sorry, something went wrong. Please make sure the AI service is configured and try again.';
+            setMessages(prev => [...prev, { role: 'model', content: message }]);
         } finally {
             setLoading(false);
         }
@@ -47,7 +52,7 @@ const AiChatInterface = () => {
         return (
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-10 right-10 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all z-50 flex items-center justify-center group active:scale-95"
+                className="fixed bottom-24 sm:bottom-10 right-4 sm:right-10 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all z-50 flex items-center justify-center group active:scale-95"
             >
                 <Sparkles size={24} className="text-white group-hover:scale-110 transition-transform" />
             </button>
@@ -55,7 +60,7 @@ const AiChatInterface = () => {
     }
 
     return (
-        <div className="fixed bottom-10 right-10 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-10 duration-200">
+        <div className="fixed bottom-24 sm:bottom-10 right-4 sm:right-10 w-[380px] max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in slide-in-from-bottom-10 duration-200">
             {/* Header */}
             <div className="bg-indigo-600 p-4 flex justify-between items-center relative overflow-hidden">
                 <div className="flex items-center gap-3 relative z-10">

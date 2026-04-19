@@ -4,7 +4,6 @@ import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import {
   Bell,
-  Menu,
   Search,
   User,
   LogOut,
@@ -12,7 +11,7 @@ import {
   Moon,
 } from 'lucide-react';
 
-const Navbar = ({ onMenuClick }) => {
+const Navbar = ({ onMenuClick, withSidebar = true }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -25,16 +24,9 @@ const Navbar = ({ onMenuClick }) => {
   };
 
   return (
-    <nav className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 fixed top-0 right-0 left-0 lg:left-64 z-30 transition-all duration-300 shadow-sm">
+    <nav className={`h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 fixed top-0 right-0 left-0 ${withSidebar ? 'lg:left-64' : ''} z-30 transition-all duration-300 shadow-sm`}>
       <div className="h-full px-4 lg:px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onMenuClick}
-            className="p-2 -ml-2 rounded-lg lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-          >
-            <Menu size={20} />
-          </button>
-
           <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg border border-transparent focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-slate-900 transition-all group w-64 lg:w-80">
             <Search size={18} className="text-slate-400 group-focus-within:text-blue-500 flex-shrink-0" />
             <input
@@ -57,23 +49,26 @@ const Navbar = ({ onMenuClick }) => {
 
           {/* Notification bell removed — no functionality */}
 
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
-
-          <div className="flex items-center gap-3 pl-1 group cursor-pointer">
-            <div className="flex flex-col items-end hidden sm:flex">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{user?.name || 'User'}</span>
-            </div>
-            <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm border border-blue-200 dark:border-blue-800">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
+          {user && (
+            <>
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
+              <div className="flex items-center gap-3 pl-1 group cursor-pointer">
+                <div className="flex flex-col items-end hidden sm:flex">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{user?.name || 'User'}</span>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm border border-blue-200 dark:border-blue-800">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </nav>

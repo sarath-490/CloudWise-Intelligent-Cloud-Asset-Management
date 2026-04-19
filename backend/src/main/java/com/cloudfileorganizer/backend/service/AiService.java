@@ -57,8 +57,8 @@ public class AiService {
      * Analyze file asynchronously (categorize and summarize)
      */
     @Async("taskExecutor")
-    public void analyzeFile(String fileId) {
-        FileMetadata file = fileRepository.findById(fileId).orElse(null);
+    public void analyzeFile(String fileId, User user) {
+        FileMetadata file = fileRepository.findByIdAndUser(fileId, user).orElse(null);
         if (file == null) return;
 
         try {

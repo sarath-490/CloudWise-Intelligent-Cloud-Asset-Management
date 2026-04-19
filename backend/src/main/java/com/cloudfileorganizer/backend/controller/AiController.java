@@ -28,15 +28,27 @@ public class AiController {
 
     @PostMapping("/chat")
     public ResponseEntity<?> chat(@RequestBody ChatRequest request, Authentication auth) {
+        if (auth == null || !(auth.getPrincipal() instanceof User)) {
+            return ResponseEntity.status(401).body(Map.of(
+                "message", "Please sign in to use the AI assistant."
+            ));
+        }
         User user = (User) auth.getPrincipal();
         String response = aiService.chatWithAgent(request.getQuery(), user);
         return ResponseEntity.ok(Map.of("response", response));
     }
 
     @PostMapping("/analyze/{fileId}")
-    public ResponseEntity<Map<String, Object>> analyze(@PathVariable String fileId) {
+    public ResponseEntity<Map<String, Object>> analyze(@PathVariable String fileId, Authentication auth) {
         try {
-            aiService.analyzeFile(fileId);
+            if (auth == null || !(auth.getPrincipal() instanceof User)) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("message", "Please sign in to use AI analysis.");
+                result.put("success", false);
+                return ResponseEntity.status(401).body(result);
+            }
+            User user = (User) auth.getPrincipal();
+            aiService.analyzeFile(fileId, user);
             
             Map<String, Object> result = new HashMap<>();
             result.put("message", "Analysis complete for file ID: " + fileId);

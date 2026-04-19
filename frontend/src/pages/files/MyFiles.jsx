@@ -175,28 +175,30 @@ const MyFiles = () => {
   }, []);
 
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in pb-12 px-1 sm:px-0 overflow-x-hidden">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">System Status</span>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
           </div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">My Files</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-bold mt-1">Manage and query your smart cloud storage</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">My Files</h1>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-semibold sm:font-bold mt-1">
+            Manage and query your smart cloud storage
+          </p>
         </div>
         <Link to="/upload">
-          <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 rounded-2xl h-12 px-6 font-bold">
+          <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 rounded-2xl h-12 px-6 font-bold w-full sm:w-auto">
             <Plus size={20} className="mr-2" /> Upload File
           </Button>
         </Link>
       </div>
 
       {/* Controls Bar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="relative flex-1 group w-full flex items-center gap-4">
-          <div className="relative flex-1">
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-stretch lg:items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="relative flex-1 group w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
             <input
               ref={searchInputRef}
@@ -216,6 +218,7 @@ const MyFiles = () => {
             value={selectedCategory}
             onChange={setSelectedCategory}
             icon={Filter}
+            className="w-full sm:w-56"
           />
 
           <CustomSelect
@@ -226,6 +229,7 @@ const MyFiles = () => {
             value={selectedAiCategory}
             onChange={setSelectedAiCategory}
             icon={Binary}
+            className="w-full sm:w-56"
           />
 
           <CustomSelect
@@ -233,10 +237,11 @@ const MyFiles = () => {
             value={selectedTag}
             onChange={setSelectedTag}
             icon={Database}
+            className="w-full sm:w-56"
           />
         </div>
 
-        <div className="flex items-center gap-4 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
           <CustomSelect
             options={[
               { label: 'Newest First', value: 'newest' },
@@ -247,6 +252,7 @@ const MyFiles = () => {
             value={sortBy}
             onChange={setSortBy}
             icon={ArrowUpDown}
+            className="w-full sm:w-56"
           />
 
           <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700">
@@ -258,7 +264,7 @@ const MyFiles = () => {
               setIsSelectionMode(!isSelectionMode);
               if (isSelectionMode) setSelectedFiles([]);
             }}
-            className={`px-4 rounded-xl text-sm font-bold ${isSelectionMode ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30' : 'text-slate-500'}`}
+            className={`px-4 rounded-xl text-sm font-bold w-full sm:w-auto ${isSelectionMode ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30' : 'text-slate-500'}`}
           >
             {isSelectionMode ? 'Cancel Selection' : 'Select'}
           </Button>
@@ -267,7 +273,7 @@ const MyFiles = () => {
             <Button
               variant="danger"
               onClick={handleBulkDelete}
-              className="bg-rose-500 hover:bg-rose-600 text-white shadow-sm rounded-xl px-4 text-sm font-bold"
+              className="bg-rose-500 hover:bg-rose-600 text-white shadow-sm rounded-xl px-4 text-sm font-bold w-full sm:w-auto"
             >
               <Trash2 size={16} className="mr-2" /> Delete ({selectedFiles.length})
             </Button>
@@ -275,7 +281,7 @@ const MyFiles = () => {
 
           <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
 
-          <div className="flex bg-slate-50 dark:bg-slate-800 rounded-2xl p-1">
+          <div className="hidden sm:flex bg-slate-50 dark:bg-slate-800 rounded-2xl p-1">
             <button
               onClick={() => setViewMode('grid')}
               aria-label="Grid View"

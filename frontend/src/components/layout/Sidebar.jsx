@@ -57,7 +57,7 @@ const Sidebar = ({ className }) => {
       ];
 
   return (
-    <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50 z-40 flex flex-col transition-all duration-300 transform lg:translate-x-0 ${className === 'open' ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/50 z-40 hidden lg:flex flex-col transition-all duration-300 transform lg:translate-x-0 ${className === 'open' ? 'translate-x-0' : '-translate-x-full'}`}> 
       {/* Branding */}
       <div className="h-20 flex items-center gap-3 px-8 border-b border-slate-100 dark:border-slate-800/50">
         <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">

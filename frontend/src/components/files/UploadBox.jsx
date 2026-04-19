@@ -77,9 +77,9 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-[32px] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-[32px] p-6 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
       <div
-        className={`border-4 border-dashed rounded-[32px] p-20 text-center transition-all duration-700 cursor-pointer relative overflow-hidden group ${isDragging
+        className={`border-4 border-dashed rounded-[32px] p-10 sm:p-16 lg:p-20 text-center transition-all duration-700 cursor-pointer relative overflow-hidden group ${isDragging
           ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/40 scale-[1.01]'
           : 'border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/40 hover:border-indigo-200 dark:hover:border-indigo-700 hover:bg-white dark:hover:bg-slate-900 hover:shadow-2xl hover:shadow-indigo-50/50 dark:hover:shadow-indigo-900/10'
           }`}
@@ -89,21 +89,25 @@ const UploadBox = ({ onUpload, accept, multiple = false }) => {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.12),_transparent_55%)] opacity-70"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-        <div className="w-24 h-24 mx-auto mb-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 relative z-10">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 sm:mb-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 relative z-10">
           {isDragging ? (
-            <Cloud size={48} className="text-indigo-600 animate-bounce" />
+            <Cloud size={44} className="text-indigo-600 animate-bounce" />
           ) : (
-            <Upload size={48} className="text-indigo-600" />
+            <Upload size={44} className="text-indigo-600" />
           )}
         </div>
 
         <div className="relative z-10">
-          <div className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+            Drag & drop ready
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
             {isDragging ? 'Drop Files Here' : 'Drop Files Here'}
           </div>
-          <div className="text-[15px] text-slate-500 dark:text-slate-400 mb-6 font-bold uppercase tracking-widest text-shadow-sm">or click to choose files</div>
+          <div className="text-xs sm:text-[15px] text-slate-500 dark:text-slate-400 mb-6 font-black uppercase tracking-widest">or tap to choose files</div>
           <div className="flex items-center justify-center gap-4">
             <div className="h-px w-8 bg-slate-200 dark:bg-slate-700"></div>
             <div className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Universal Support • 100MB Max</div>

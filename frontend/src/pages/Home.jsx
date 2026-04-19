@@ -439,26 +439,26 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 overflow-hidden">
+      <section className="py-20 sm:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 rounded-[56px] p-12 lg:p-24 overflow-hidden shadow-2xl shadow-indigo-500/40 text-center group hover:shadow-indigo-500/60 transition-shadow">
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl -mr-64 -mt-64 group-hover:scale-110 transition-transform duration-1000"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+          <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 rounded-3xl sm:rounded-[56px] p-6 sm:p-10 lg:p-24 overflow-hidden shadow-2xl shadow-indigo-500/40 text-center group hover:shadow-indigo-500/60 transition-shadow">
+            <div className="absolute top-0 right-0 w-[420px] sm:w-[600px] h-[420px] sm:h-[600px] bg-white/10 rounded-full blur-3xl -mr-48 sm:-mr-64 -mt-48 sm:-mt-64 group-hover:scale-110 transition-transform duration-1000"></div>
+            <div className="absolute bottom-0 left-0 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] bg-white/5 rounded-full blur-3xl -ml-20 sm:-ml-32 -mb-20 sm:-mb-32"></div>
 
             <div className="relative z-10 max-w-3xl mx-auto">
-              <h2 className="text-4xl lg:text-6xl font-black text-white mb-8 tracking-tighter leading-tight">
+              <h2 className="text-2xl sm:text-4xl lg:text-6xl font-black text-white mb-4 sm:mb-8 tracking-tighter leading-tight">
                 Ready to get started?
               </h2>
-              <p className="text-lg lg:text-xl text-indigo-100 mb-12 font-medium">
+              <p className="text-sm sm:text-lg lg:text-xl text-indigo-100 mb-6 sm:mb-12 font-medium">
                 Join the smart way to manage your files with AI-powered organization.
               </p>
               <Link to="/register">
-                <Button size="large" variant="secondary" className="bg-white !text-indigo-600 hover:bg-slate-50 py-6 px-12 rounded-2xl text-xl font-black shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all group flex items-center justify-center border-none">
+                <Button size="large" variant="secondary" className="bg-white !text-indigo-600 hover:bg-slate-50 py-4 sm:py-6 px-6 sm:px-12 rounded-2xl text-base sm:text-xl font-black shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all group flex items-center justify-center border-none w-full sm:w-auto">
                   Get Started Free
                   <ArrowRight className="inline ml-2 group-hover:translate-x-2 transition-transform" size={24} />
                 </Button>
               </Link>
-              <p className="text-sm text-indigo-200 mt-6 font-medium">No credit card required • 1GB free storage • Setup in 2 minutes</p>
+              <p className="text-xs sm:text-sm text-indigo-200 mt-4 sm:mt-6 font-medium">No credit card required • 1GB free storage • Setup in 2 minutes</p>
             </div>
           </div>
         </div>
@@ -512,7 +512,7 @@ const Home = () => {
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);

@@ -207,22 +207,22 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="space-y-8 pb-12 animate-fade-in max-w-7xl mx-auto">
+        <div className="space-y-6 sm:space-y-8 pb-10 sm:pb-12 animate-fade-in max-w-7xl mx-auto px-2 sm:px-0">
             {/* Admin Header */}
-            <div className="bg-slate-900 border border-slate-800 p-10 rounded-[40px] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none transform translate-x-20 -translate-y-20">
+            <div className="bg-slate-900 border border-slate-800 p-6 sm:p-8 lg:p-10 rounded-3xl sm:rounded-[40px] shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 sm:p-12 opacity-5 pointer-events-none transform translate-x-10 sm:translate-x-20 -translate-y-10 sm:-translate-y-20">
                     <ShieldCheck size={320} className="text-white" />
                 </div>
 
                 <div className="relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-4 sm:mb-6">
                         <Lock size={12} />
                         Master Control Center
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter mb-4">
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter mb-3 sm:mb-4">
                         System Overseer Console
                     </h1>
-                    <p className="text-slate-400 font-medium text-lg max-w-2xl">
+                    <p className="text-slate-400 font-medium text-sm sm:text-base lg:text-lg max-w-2xl">
                         Real-time platform metrics and user governance. <span className="text-indigo-400">Strictly privacy-compliant.</span>
                     </p>
                 </div>
@@ -235,7 +235,7 @@ const AdminDashboard = () => {
             )}
 
             {/* Admin Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
                 {[
                     { title: 'Registered Users', value: stats.totalUsers, icon: <Users />, trend: 'All time', color: 'text-blue-500' },
                     { title: 'Total Storage', value: stats.totalStorage, icon: <HardDrive />, trend: `${stats.storageLimit} max`, color: 'text-indigo-500' },
@@ -243,13 +243,13 @@ const AdminDashboard = () => {
                     { title: 'Concurrent Sessions', value: stats.activeUsers, icon: <Activity />, trend: 'System stable', color: 'text-amber-500' },
                     { title: 'Core Hub Uptime', value: stats.systemUptime, icon: <BarChart3 />, trend: '99.9% SLA', color: 'text-purple-500' },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all">
-                        <div className={`w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-4 ${stat.color}`}>
+                    <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all">
+                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-3 sm:mb-4 ${stat.color}`}>
                             {stat.icon}
                         </div>
-                        <h3 className="text-slate-500 dark:text-slate-400 text-xs font-black uppercase tracking-wider mb-1">{stat.title}</h3>
-                        <p className="text-2xl font-black text-slate-900 dark:text-white mb-2">{stat.value}</p>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.trend}</span>
+                        <h3 className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-black uppercase tracking-wider mb-1">{stat.title}</h3>
+                        <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">{stat.value}</p>
+                        <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.trend}</span>
                     </div>
                 ))}
             </div>
@@ -257,7 +257,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* User Management Table */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl sm:rounded-[40px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                         <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
                                 <UserPlus size={24} className="text-indigo-500" />
@@ -406,7 +406,7 @@ const AdminDashboard = () => {
 
                 {/* System Activity */}
                 <div className="space-y-8">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[40px] shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-8 rounded-3xl sm:rounded-[40px] shadow-sm">
                         <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3">
                             <Database size={20} className="text-purple-500" />
                             S3 Infrastructure
@@ -439,7 +439,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="bg-indigo-600 p-8 rounded-[40px] shadow-xl text-white">
+                    <div className="bg-indigo-600 p-5 sm:p-8 rounded-3xl sm:rounded-[40px] shadow-xl text-white">
                         <h3 className="text-lg font-black mb-2 tracking-tight">Security Protocol</h3>
                         <p className="text-indigo-100 text-sm font-medium mb-6 leading-relaxed">
                             Administrative access is audited. No access to private user binary data is permitted under protocol v2.4.
@@ -452,7 +452,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[40px] shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-8 rounded-3xl sm:rounded-[40px] shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <Server size={18} className="text-indigo-500" />
@@ -491,7 +491,7 @@ const AdminDashboard = () => {
                     )}
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[40px] shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 sm:p-8 rounded-3xl sm:rounded-[40px] shadow-sm">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <Settings size={18} className="text-amber-500" />
