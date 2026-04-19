@@ -148,6 +148,7 @@
 @media (max-width: 768px) {
   .navbar {
     left: 0;
+    padding: 0 16px;
   }
 
   .navbar-menu-btn {

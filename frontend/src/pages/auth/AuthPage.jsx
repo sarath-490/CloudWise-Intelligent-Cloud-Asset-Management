@@ -13,6 +13,7 @@ const AuthPage = () => {
     // Determine initial state from URL
     const initialIsLogin = location.pathname !== '/register';
     const [isLogin, setIsLogin] = useState(initialIsLogin);
+    const [isMobile, setIsMobile] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -40,6 +41,21 @@ const AuthPage = () => {
             navigate(path, { replace: true });
         }
     }, [isLogin, navigate, location.pathname]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const media = window.matchMedia('(max-width: 1024px)');
+        const handleChange = () => setIsMobile(media.matches);
+        handleChange();
+
+        if (media.addEventListener) {
+            media.addEventListener('change', handleChange);
+            return () => media.removeEventListener('change', handleChange);
+        }
+
+        media.addListener(handleChange);
+        return () => media.removeListener(handleChange);
+    }, []);
 
     const handleChange = (e) => {
         setFormData({
@@ -103,21 +119,32 @@ const AuthPage = () => {
         register: { x: "100%", opacity: 1 }
     };
 
+    const formPanelVariants = isMobile
+        ? {
+            login: { left: '0%', borderRadius: '0' },
+            register: { left: '0%', borderRadius: '0' }
+        }
+        : {
+            login: { left: '50%', borderRadius: '3rem 0 0 3rem' },
+            register: { left: '0%', borderRadius: '0 3rem 3rem 0' }
+        };
+
     return (
-        <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
+        <div className={`auth-page min-h-screen flex bg-slate-50 dark:bg-slate-950 relative ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}>
             <div className="w-full h-full flex absolute inset-0">
 
                 {/* Animated Background Container containing both Side Panels */}
-                <motion.div
-                    className="w-[200%] h-full flex absolute top-0 left-0 bg-blue-600"
-                    initial={false}
-                    animate={isLogin ? "login" : "register"}
-                    variants={{
-                        login: { x: "0%" },
-                        register: { x: "-50%" }
-                    }}
-                    transition={{ type: "spring", stiffness: 70, damping: 15 }}
-                >
+                {!isMobile && (
+                    <motion.div
+                        className="auth-bg-panels w-[200%] h-full flex absolute top-0 left-0 bg-blue-600"
+                        initial={false}
+                        animate={isLogin ? "login" : "register"}
+                        variants={{
+                            login: { x: "0%" },
+                            register: { x: "-50%" }
+                        }}
+                        transition={{ type: "spring", stiffness: 70, damping: 15 }}
+                    >
                     {/* Left panel (Login Branding) */}
                     <div className="w-1/2 h-full flex flex-col justify-center p-12 relative overflow-hidden text-white">
                         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-blue-500 opacity-50 blur-3xl"></div>
@@ -183,17 +210,15 @@ const AuthPage = () => {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                    </motion.div>
+                )}
 
                 {/* Animated Form Container (White Panel) */}
                 <motion.div
-                    className="absolute top-0 w-full lg:w-1/2 h-full bg-white dark:bg-slate-900 shadow-2xl z-20 overflow-y-auto flex items-center justify-center p-8 transition-colors duration-300"
+                    className="auth-form-panel relative lg:absolute top-0 w-full lg:w-1/2 min-h-screen lg:h-full bg-white dark:bg-slate-900 shadow-2xl z-20 overflow-y-auto flex items-center justify-center p-6 sm:p-8 transition-colors duration-300"
                     initial={false}
                     animate={isLogin ? "login" : "register"}
-                    variants={{
-                        login: { left: "50%", borderRadius: "3rem 0 0 3rem" },
-                        register: { left: "0%", borderRadius: "0 3rem 3rem 0" }
-                    }}
+                    variants={formPanelVariants}
                     transition={{ type: "spring", stiffness: 70, damping: 15 }}
                 >
                     {/* Mobile Branding (only visible on small screens) */}
@@ -204,7 +229,7 @@ const AuthPage = () => {
                         </div>
                     </div>
 
-                    <div className="w-full max-w-md my-auto pb-8">
+                    <div className="auth-form-content w-full max-w-md my-auto pb-8">
                         <AnimatePresence mode="wait">
                             {isLogin ? (
                                 <motion.div

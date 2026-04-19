@@ -58,3 +58,9 @@
   color: var(--danger-color);
   margin-top: -4px;
 }
+
+@media (max-width: 768px) {
+  .input-field {
+    height: 44px;
+  }
+}

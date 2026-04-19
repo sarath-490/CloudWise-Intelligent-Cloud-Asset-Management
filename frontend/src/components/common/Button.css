@@ -86,6 +86,17 @@
   height: 48px;
 }
 
+@media (max-width: 768px) {
+  .btn-medium {
+    height: 44px;
+  }
+
+  .btn-large {
+    height: 46px;
+    padding: 10px 20px;
+  }
+}
+
 /* States */
 .btn-disabled,
 .btn:disabled {

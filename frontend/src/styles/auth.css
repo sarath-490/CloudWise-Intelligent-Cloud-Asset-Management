@@ -95,3 +95,22 @@
   font-size: 14px;
   margin-bottom: 20px;
 }
+
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 16px;
+  }
+
+  .auth-card {
+    padding: 28px 20px;
+    border-radius: 14px;
+  }
+
+  .auth-logo {
+    font-size: 26px;
+  }
+
+  .auth-title {
+    font-size: 20px;
+  }
+}

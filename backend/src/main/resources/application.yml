@@ -58,7 +58,7 @@ logging:
 app:
   base-url: ${APP_BASE_URL}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:https://smart-cloud-iota.vercel.app}
 
 transfer:
   default-expiry-minutes: ${TRANSFER_DEFAULT_EXPIRY_MINUTES:10}

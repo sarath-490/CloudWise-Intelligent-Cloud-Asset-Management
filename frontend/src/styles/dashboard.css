@@ -139,3 +139,26 @@
   color: var(--text-muted);
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 16px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-card-value {
+    font-size: 26px;
+  }
+
+  .chart-placeholder {
+    height: 220px;
+  }
+}
