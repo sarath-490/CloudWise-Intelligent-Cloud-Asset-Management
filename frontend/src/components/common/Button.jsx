@@ -20,9 +20,9 @@ const Button = ({
   };
 
   const sizes = {
-    small: 'px-3 py-1.5 text-sm h-8',
-    medium: 'px-5 py-2.5 text-sm h-10',
-    large: 'px-6 py-3 text-base h-12',
+    small: 'px-3 py-1.5 text-sm min-h-[2rem]',
+    medium: 'px-5 py-2.5 text-sm min-h-[2.5rem]',
+    large: 'px-6 py-3 text-base min-h-[3rem]',
   };
 
   const variantClass = variants[variant] || variants.primary;

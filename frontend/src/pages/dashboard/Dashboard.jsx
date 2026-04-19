@@ -195,14 +195,17 @@ const Dashboard = () => {
                 <FileCard key={file.id} file={file} viewMode="grid" />
               ))
             ) : (
-              <div className="col-span-2 py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center shadow-sm">
-                <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6 border border-slate-100 dark:border-slate-800">
+              <div className="col-span-2 py-16 flex flex-col items-center justify-center bg-white/95 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700/70 rounded-2xl text-center shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800/80 flex items-center justify-center text-slate-300 dark:text-slate-500 mb-6 border border-slate-100 dark:border-slate-700">
                   <FolderOpen size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">No Files Yet</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-xs font-medium text-sm">Upload your first file to get started with AI sorting.</p>
+                <p className="text-slate-500 dark:text-slate-300 max-w-xs font-medium text-sm">Upload your first file to get started with AI sorting.</p>
                 <Link to="/upload" className="mt-6">
-                  <Button variant="secondary" className="rounded-xl px-6 border border-slate-200 dark:border-slate-800 text-sm font-bold bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700">
+                  <Button
+                    variant="secondary"
+                    className="rounded-xl px-6 border border-slate-200 dark:border-indigo-400/40 text-sm font-bold bg-white dark:bg-indigo-500/90 dark:text-white hover:bg-slate-50 dark:hover:bg-indigo-500"
+                  >
                     Upload File
                   </Button>
                 </Link>

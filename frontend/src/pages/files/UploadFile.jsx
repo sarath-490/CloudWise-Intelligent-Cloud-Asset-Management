@@ -12,12 +12,24 @@ const UploadFile = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
   const messageRef = useRef(null);
+  const progressRef = useRef(null);
   const { showToast } = useToast();
+
+  const isMobileViewport = () => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(max-width: 639px)').matches;
+  };
 
   const handleUpload = async (files) => {
     const filesToUpload = Array.isArray(files) ? files : [files];
     setUploading(true);
     setMessage({ type: '', text: '' });
+
+    if (isMobileViewport()) {
+      setTimeout(() => {
+        progressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 0);
+    }
 
     try {
       for (const file of filesToUpload) {
@@ -99,7 +111,10 @@ const UploadFile = () => {
 
       {/* Progress */}
       {uploading && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl sm:rounded-[40px] p-5 sm:p-10 shadow-2xl relative overflow-hidden group">
+        <div
+          ref={progressRef}
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl sm:rounded-[40px] p-5 sm:p-10 shadow-2xl relative overflow-hidden group"
+        >
           <div className="absolute top-0 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800">
             <div
               className="h-full bg-indigo-600 transition-all duration-300"

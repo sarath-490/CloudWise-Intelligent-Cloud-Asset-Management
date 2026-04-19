@@ -365,15 +365,15 @@ const MyFiles = () => {
           ))}
         </div>
       ) : (
-        <div className="py-24 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[48px] text-center">
-          <div className="w-20 h-20 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 mb-6">
+        <div className="py-24 flex flex-col items-center justify-center bg-white/95 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700/70 rounded-[48px] text-center">
+          <div className="w-20 h-20 rounded-3xl bg-slate-50 dark:bg-slate-800/80 flex items-center justify-center text-slate-300 dark:text-slate-500 mb-6 border border-slate-100 dark:border-slate-700">
             <Binary size={40} />
           </div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No files found</h3>
-          <p className="text-slate-500 dark:text-slate-400 max-w-sm font-bold text-sm">Your search criteria returned no results. Adjust filters or upload a file.</p>
+          <p className="text-slate-500 dark:text-slate-300 max-w-sm font-bold text-sm">Your search criteria returned no results. Adjust filters or upload a file.</p>
           <Button
             variant="secondary"
-            className="mt-8 border-2 border-slate-200 dark:border-slate-800 rounded-2xl px-8 font-black text-slate-600 dark:text-slate-400 text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+            className="mt-8 border-2 border-slate-200 dark:border-indigo-400/40 rounded-2xl px-8 font-black text-slate-600 dark:text-slate-100 text-xs uppercase tracking-widest bg-white dark:bg-indigo-500/90 hover:bg-slate-50 dark:hover:bg-indigo-500 transition-all"
             onClick={() => setSearchQuery('')}
           >
             Reset Filters

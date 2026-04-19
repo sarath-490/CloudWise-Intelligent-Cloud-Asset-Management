@@ -231,14 +231,28 @@ const TransferHub = () => {
                 {transferUrl}
               </div>
               <div className="flex gap-3">
-                <Button variant="secondary" onClick={() => copyText(transferUrl)}>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => copyText(transferUrl)}
+                  className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                >
                   <Copy size={16} className="mr-2" /> Copy Link
                 </Button>
-                <Button variant="secondary" onClick={() => endSession(session.session_id)}>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => endSession(session.session_id)}
+                  className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                >
                   End Session
                 </Button>
                 <a href={transferUrl} target="_blank" rel="noreferrer" className="inline-flex">
-                  <Button variant="secondary">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                  >
                     <LinkIcon size={16} className="mr-2" /> Open
                   </Button>
                 </a>
@@ -273,7 +287,13 @@ const TransferHub = () => {
       <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 md:p-8 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-900 dark:text-white">My Active Transfers</h2>
-          <Button variant="secondary" onClick={loadMyTransfers} disabled={loadingTransfers}>
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={loadMyTransfers}
+            disabled={loadingTransfers}
+            className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+          >
             {loadingTransfers ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
@@ -289,17 +309,31 @@ const TransferHub = () => {
               <div className="text-sm font-semibold break-all text-slate-700 dark:text-slate-200">{item.session_id}</div>
               <div className="text-xs text-slate-500">Status: {item.status}</div>
               <div className="text-xs text-slate-500">PIN: <span className="font-black tracking-widest text-amber-700 dark:text-amber-300">{item.pin}</span></div>
-              <div className="text-xs text-slate-500">Expires: {new Date(item.expires_at).toLocaleString()}</div>
+              <div className="text-xs text-slate-500">Expires: {formatIst(item.expires_at)} (IST)</div>
               <div className="text-xs text-slate-500">Downloads: {item.downloads_count}/{item.max_downloads}</div>
               <div className="flex gap-2 pt-1">
-                <Button variant="secondary" onClick={() => copyText(item.transfer_url)}>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => copyText(item.transfer_url)}
+                  className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                >
                   <Copy size={14} className="mr-1" /> Copy Link
                 </Button>
-                <Button variant="secondary" onClick={() => endSession(item.session_id)}>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  onClick={() => endSession(item.session_id)}
+                  className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                >
                   End Session
                 </Button>
                 <a href={item.transfer_url} target="_blank" rel="noreferrer" className="inline-flex">
-                  <Button variant="secondary">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    className="bg-gradient-to-b from-white to-slate-100 border-slate-300 shadow-sm shadow-slate-200/60 hover:from-white hover:to-slate-200"
+                  >
                     <LinkIcon size={14} className="mr-1" /> Open
                   </Button>
                 </a>
