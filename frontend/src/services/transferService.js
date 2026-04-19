@@ -93,7 +93,7 @@ const parseFilenameFromContentDisposition = (disposition) => {
 const transferService = {
   createSession: async (payload = {}) => {
     try {
-      const response = await api.post('/transfer/create', {
+      const response = await api.post('/api/transfer/create', {
         ...payload,
         client_base_url: window.location.origin,
       });
@@ -107,12 +107,12 @@ const transferService = {
   },
 
   getSession: async (sessionId) => {
-    const response = await api.get(`/transfer/${sessionId}`);
+    const response = await api.get(`/api/transfer/${sessionId}`);
     return response.data;
   },
 
   getUploadUrl: async ({ session_id, filename, file_size, content_type }) => {
-    const response = await api.post('/transfer/upload-url', {
+    const response = await api.post('/api/transfer/upload-url', {
       session_id,
       filename,
       file_size,
@@ -122,7 +122,7 @@ const transferService = {
   },
 
   completeUpload: async ({ session_id, file_key }) => {
-    const response = await api.post('/transfer/complete-upload', {
+    const response = await api.post('/api/transfer/complete-upload', {
       session_id,
       file_key,
       client_base_url: window.location.origin,
@@ -131,12 +131,12 @@ const transferService = {
   },
 
   endSession: async ({ session_id }) => {
-    const response = await api.post('/transfer/end', { session_id });
+    const response = await api.post('/api/transfer/end', { session_id });
     return response.data;
   },
 
   verifyPin: async ({ session_id, pin }) => {
-    const response = await api.post('/transfer/verify-pin', {
+    const response = await api.post('/api/transfer/verify-pin', {
       session_id,
       pin,
     });
@@ -144,14 +144,14 @@ const transferService = {
   },
 
   getDownloadUrl: async ({ session_id, verification_token }) => {
-    const response = await api.get('/transfer/download', {
+    const response = await api.get('/api/transfer/download', {
       params: { session_id, verification_token },
     });
     return response.data;
   },
 
   getMySessions: async () => {
-    const response = await api.get('/transfer/my-sessions', {
+    const response = await api.get('/api/transfer/my-sessions', {
       params: { client_base_url: window.location.origin },
     });
     return response.data;
@@ -159,7 +159,7 @@ const transferService = {
 
   downloadFileStream: async ({ session_id, verification_token, fallback_file_name }) => {
     try {
-      const response = await api.get('/transfer/download/stream', {
+      const response = await api.get('/api/transfer/download/stream', {
         params: { session_id, verification_token },
         responseType: 'blob',
       });

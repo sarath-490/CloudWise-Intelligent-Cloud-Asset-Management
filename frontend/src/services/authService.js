@@ -35,12 +35,12 @@ export const authService = {
   },
 
   getProfile: async () => {
-    const response = await api.get('/user/profile');
+    const response = await api.get('/api/user/profile');
     return response.data;
   },
 
   updatePreferences: async (preferences) => {
-    const response = await api.put('/user/preferences', preferences);
+    const response = await api.put('/api/user/preferences', preferences);
     return response.data;
   },
 };

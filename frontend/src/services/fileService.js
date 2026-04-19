@@ -19,13 +19,13 @@ const fileService = {
       },
     };
 
-    const response = await api.post('/files/upload', formData, config);
+    const response = await api.post('/api/files/upload', formData, config);
     return response.data;
   },
 
   getAllFiles: async (params = {}) => {
     try {
-      const response = await api.get('/files', { params });
+      const response = await api.get('/api/files', { params });
       // Ensure we always return an array
       return {
         success: true,
@@ -42,7 +42,7 @@ const fileService = {
 
   getFileById: async (id) => {
     try {
-      const response = await api.get(`/files/${id}`);
+      const response = await api.get(`/api/files/${id}`);
       return {
         success: true,
         data: response.data
@@ -58,7 +58,7 @@ const fileService = {
 
   deleteFile: async (id) => {
     try {
-      const response = await api.delete(`/files/${id}`);
+      const response = await api.delete(`/api/files/${id}`);
       return {
         success: true,
         data: response.data
@@ -75,7 +75,7 @@ const fileService = {
   downloadFile: async (id, fileName) => {
     try {
       // Stream file through backend — never exposes S3 URLs to the client
-      const response = await api.get(`/files/${id}/download`, {
+      const response = await api.get(`/api/files/${id}/download`, {
         responseType: 'blob',
       });
 
@@ -112,7 +112,7 @@ const fileService = {
 
   getCategories: async () => {
     try {
-      const response = await api.get('/files/categories');
+      const response = await api.get('/api/files/categories');
       return { success: true, data: response.data || [] };
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -122,7 +122,7 @@ const fileService = {
 
   updateCategory: async (id, category) => {
     try {
-      const response = await api.put(`/files/${id}/category`, { category });
+      const response = await api.put(`/api/files/${id}/category`, { category });
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error updating category:', error);
@@ -132,7 +132,7 @@ const fileService = {
 
   reanalyzeFile: async (id) => {
     try {
-      const response = await api.post(`/files/${id}/reanalyze`);
+      const response = await api.post(`/api/files/${id}/reanalyze`);
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error reanalyzing file:', error);
@@ -142,7 +142,7 @@ const fileService = {
 
   deleteBulk: async (ids) => {
     try {
-      const response = await api.delete('/files/bulk', { data: { ids } });
+      const response = await api.delete('/api/files/bulk', { data: { ids } });
       return { success: true, data: response.data };
     } catch (error) {
       console.error('Error in bulk delete:', error);
@@ -152,7 +152,7 @@ const fileService = {
 
   searchFiles: async (query) => {
     try {
-      const response = await api.get('/files/search', { params: { q: query } });
+      const response = await api.get('/api/files/search', { params: { q: query } });
       return { success: true, data: response.data || [] };
     } catch (error) {
       console.error('Error searching files:', error);
