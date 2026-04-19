@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getServletPath();
-        return path != null && path.startsWith("/auth/");
+        return path != null && path.startsWith("/api/auth/");
     }
 
     @Override

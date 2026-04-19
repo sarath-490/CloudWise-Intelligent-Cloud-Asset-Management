@@ -2,18 +2,18 @@ import api from './api';
 
 export const authService = {
   login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/auth/login', { email, password });
     return response.data;
   },
 
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/api/auth/register', userData);
     return response.data;
   },
 
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post('/api/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -25,12 +25,12 @@ export const authService = {
   },
 
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
+    const response = await api.post('/api/auth/forgot-password', { email });
     return response.data;
   },
 
   resetPassword: async ({ token, password }) => {
-    const response = await api.post('/auth/reset-password', { token, password });
+    const response = await api.post('/api/auth/reset-password', { token, password });
     return response.data;
   },
 

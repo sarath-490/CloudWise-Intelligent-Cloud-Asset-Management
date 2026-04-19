@@ -91,7 +91,7 @@ public class FileService {
 
         // Trigger AI analysis asynchronously only when user preference allows it.
         if (aiEnabledForUser) {
-            aiService.analyzeFile(savedFile.getId());
+            aiService.analyzeFile(savedFile.getId(), user);
         }
 
         return savedFile;
@@ -228,7 +228,7 @@ public class FileService {
         }
         FileMetadata file = fileRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new IllegalArgumentException("File not found or access denied"));
-        aiService.analyzeFile(file.getId());
+        aiService.analyzeFile(file.getId(), user);
     }
 
     @Transactional
