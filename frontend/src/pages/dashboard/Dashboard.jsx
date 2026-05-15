@@ -17,10 +17,11 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import FileCard from '../../components/files/FileCard';
 import Button from '../../components/common/Button';
 import fileService from '../../services/fileService';
+import { calculateStorageUsage } from '../../utils/storage';
+import { formatFileSize } from '../../utils/format';
 
 const StatsCard = ({ title, value, icon, trend, className = '' }) => (
   <div className={`p-6 rounded-2xl flex flex-col justify-between shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:shadow-md hover:-translate-y-1 bg-white dark:bg-slate-900 ${className}`}>
@@ -42,7 +43,6 @@ const StatsCard = ({ title, value, icon, trend, className = '' }) => (
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { theme } = useTheme();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -50,10 +50,10 @@ const Dashboard = () => {
     storageUsedBytes: 0,
     storageUsedGB: '0',
     percentUsed: 0,
+    aiProcessedFiles: 0,
+    storageLimitGB: '1',
     breakdown: []
   });
-
-  const STORAGE_LIMIT_GB = 1;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -63,9 +63,10 @@ const Dashboard = () => {
           const allFiles = result.data;
           setFiles(allFiles);
 
-          const totalBytes = allFiles.reduce((acc, f) => acc + (f.size || 0), 0);
-          const usedGB = totalBytes / (1024 * 1024 * 1024);
-          const percent = (totalBytes / (STORAGE_LIMIT_GB * 1024 * 1024 * 1024)) * 100;
+          const storage = calculateStorageUsage(allFiles, user);
+          const usedGB = storage.totalBytes / (1024 * 1024 * 1024);
+          const limitGB = storage.limitBytes / (1024 * 1024 * 1024);
+          const aiProcessedFiles = allFiles.filter((file) => file.aiAnalysisStatus === 'COMPLETED').length;
 
           // Breakdown calculation
           const categories = {};
@@ -75,7 +76,6 @@ const Dashboard = () => {
           });
 
           const breakdownData = Object.entries(categories).map(([label, size]) => {
-            const sizeGB = size / (1024 * 1024 * 1024);
             const colorMap = {
               'Documents': 'bg-blue-500',
               'Images': 'bg-emerald-500',
@@ -85,17 +85,19 @@ const Dashboard = () => {
             };
             return {
               label,
-              sizeText: size > 1024 * 1024 ? `${(size / (1024 * 1024)).toFixed(1)} MB` : `${(size / 1024).toFixed(1)} KB`,
-              percent: totalBytes > 0 ? Math.round((size / totalBytes) * 100) : 0,
+              sizeText: formatFileSize(size),
+              percent: storage.totalBytes > 0 ? Math.round((size / storage.totalBytes) * 100) : 0,
               color: colorMap[label] || colorMap['Other']
             };
           }).sort((a, b) => b.percent - a.percent).slice(0, 3);
 
           setStats({
             totalFiles: allFiles.length,
-            storageUsedBytes: totalBytes,
+            storageUsedBytes: storage.totalBytes,
             storageUsedGB: usedGB.toFixed(4),
-            percentUsed: Math.min(percent, 100).toFixed(2),
+            percentUsed: storage.percentUsed.toFixed(2),
+            aiProcessedFiles,
+            storageLimitGB: limitGB.toFixed(2),
             breakdown: breakdownData
           });
         }
@@ -156,7 +158,7 @@ const Dashboard = () => {
           title="Storage Used"
           value={`${stats.percentUsed}%`}
           icon={<HardDrive size={22} />}
-          trend={`Of ${STORAGE_LIMIT_GB}GB Limit`}
+          trend={`Of ${stats.storageLimitGB}GB Limit`}
         />
         <StatsCard
           title="Storage Size"
@@ -165,10 +167,10 @@ const Dashboard = () => {
           trend="Total Used"
         />
         <StatsCard
-          title="AI Status"
-          value={stats.totalFiles > 0 ? "Active" : "Idle"}
+          title="AI Processed"
+          value={stats.aiProcessedFiles}
           icon={<BrainCircuit size={22} />}
-          trend="Smart Sorting"
+          trend="Completed Files"
         />
       </div>
 

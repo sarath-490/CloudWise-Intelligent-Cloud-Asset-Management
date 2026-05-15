@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import fileService from '../../services/fileService';
 import { useAuth } from '../../context/AuthContext';
+import { calculateStorageUsage } from '../../utils/storage';
 
 const Sidebar = ({ className }) => {
   const location = useLocation();
@@ -27,17 +28,15 @@ const Sidebar = ({ className }) => {
       try {
         const result = await fileService.getAllFiles();
         if (result.success) {
-          const totalBytes = result.data.reduce((acc, f) => acc + (f.size || 0), 0);
-          const usedGB = totalBytes / (1024 * 1024 * 1024);
-          const percent = (usedGB / 1) * 100; // 1GB limit
-          setStats({ percentUsed: Math.min(percent, 100).toFixed(0) });
+          const storage = calculateStorageUsage(result.data, user);
+          setStats({ percentUsed: storage.percentUsed.toFixed(0) });
         }
       } catch (e) {
         console.error('Failed to fetch sidebar stats');
       }
     };
     fetchStats();
-  }, [location.pathname]);
+  }, [location.pathname, user?.storageLimitBytes]);
 
   const menuItems = user?.role === 'ADMIN'
     ? [{ name: 'Admin', path: '/admin', icon: <ShieldCheck size={20} /> }]

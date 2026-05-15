@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import fileService from '../../services/fileService';
 import Loader from '../../components/common/Loader';
-import { BarChart3, TrendingUp, HardDrive } from 'lucide-react';
+import { BarChart3, TrendingUp, HardDrive, Tags, BadgePercent, FileStack } from 'lucide-react';
 import { parseAiTags } from '../../utils/aiTags';
+import { formatFileSize as formatBytes } from '../../utils/format';
 
 const Analytics = () => {
   const [analytics, setAnalytics] = useState({
     categoryStats: {},
     aiCategoryStats: {},
     aiTagStats: {},
+    aiTagCoverage: 0,
+    averageTagsPerFile: 0,
+    totalTaggedFiles: 0,
+    totalUniqueTags: 0,
     sizeByCategory: {},
     uploadTrends: [],
   });
@@ -34,6 +39,8 @@ const Analytics = () => {
       const aiTagStats = {};
       const sizeByCategory = {};
       const uploadTrends = {};
+      let taggedFiles = 0;
+      let totalTagMentions = 0;
 
       files.forEach((file) => {
         const category = file.category || 'Uncategorized';
@@ -42,18 +49,42 @@ const Analytics = () => {
         aiCategoryStats[aiCategory] = (aiCategoryStats[aiCategory] || 0) + 1;
         sizeByCategory[category] = (sizeByCategory[category] || 0) + (file.size || 0);
 
-        parseAiTags(file.aiTags).forEach((tag) => {
-          aiTagStats[tag] = (aiTagStats[tag] || 0) + 1;
+        const normalizedTags = Array.from(new Set(
+          parseAiTags(file.aiTags)
+            .map((tag) => String(tag).trim().replace(/^#/, ''))
+            .filter(Boolean)
+        ));
+
+        if (normalizedTags.length > 0) {
+          taggedFiles += 1;
+          totalTagMentions += normalizedTags.length;
+        }
+
+        normalizedTags.forEach((tag) => {
+          const key = tag.toLowerCase();
+          if (!key) return;
+          if (!aiTagStats[key]) {
+            aiTagStats[key] = { label: tag, count: 0 };
+          }
+          aiTagStats[key].count += 1;
         });
 
         const date = new Date(file.uploadDate).toLocaleDateString();
         uploadTrends[date] = (uploadTrends[date] || 0) + 1;
       });
 
+      const totalUniqueTags = Object.keys(aiTagStats).length;
+      const aiTagCoverage = files.length > 0 ? Math.round((taggedFiles / files.length) * 100) : 0;
+      const averageTagsPerFile = taggedFiles > 0 ? totalTagMentions / taggedFiles : 0;
+
       setAnalytics({
         categoryStats,
         aiCategoryStats,
         aiTagStats,
+        aiTagCoverage,
+        averageTagsPerFile,
+        totalTaggedFiles: taggedFiles,
+        totalUniqueTags,
         sizeByCategory,
         uploadTrends: Object.entries(uploadTrends)
           .map(([date, count]) => ({ date, count }))
@@ -64,14 +95,6 @@ const Analytics = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   if (loading) {
@@ -91,10 +114,45 @@ const Analytics = () => {
         <p className="text-base text-slate-600 dark:text-slate-400">Insights into your file organization</p>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">AI Coverage</span>
+            <BadgePercent size={18} className="text-indigo-500" />
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{analytics.aiTagCoverage}%</div>
+          <div className="text-xs text-slate-500 mt-1">files with at least one AI tag</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Unique Tags</span>
+            <Tags size={18} className="text-emerald-500" />
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{analytics.totalUniqueTags}</div>
+          <div className="text-xs text-slate-500 mt-1">distinct normalized tags</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Avg Tags/File</span>
+            <FileStack size={18} className="text-amber-500" />
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{analytics.averageTagsPerFile.toFixed(1)}</div>
+          <div className="text-xs text-slate-500 mt-1">among tagged files</div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-400">Tagged Files</span>
+            <BarChart3 size={18} className="text-sky-500" />
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white">{analytics.totalTaggedFiles}</div>
+          <div className="text-xs text-slate-500 mt-1">files analyzed with tags</div>
+        </div>
+      </div>
+
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm mb-6 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">AI Categories and Top Tags</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Classification and tag distribution from AI analysis</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Classification and tag usage from AI analysis</p>
         </div>
         <div className="p-6 grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -104,17 +162,35 @@ const Analytics = () => {
                 <span className="font-bold text-slate-900 dark:text-white">{count}</span>
               </div>
             ))}
+            {Object.keys(analytics.aiCategoryStats).length === 0 && (
+              <div className="text-sm text-slate-500 dark:text-slate-400">No AI categories available.</div>
+            )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {Object.entries(analytics.aiTagStats)
-              .sort((a, b) => b[1] - a[1])
+              .sort((a, b) => b[1].count - a[1].count)
               .slice(0, 12)
-              .map(([tag, count]) => (
-                <div key={tag} className="flex justify-between text-sm p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">#{tag}</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{count}</span>
-                </div>
-              ))}
+              .map(([tagKey, payload]) => {
+                const share = analytics.totalTaggedFiles > 0
+                  ? Math.round((payload.count / analytics.totalTaggedFiles) * 100)
+                  : 0;
+
+                return (
+                  <div key={tagKey} className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50">
+                    <div className="flex justify-between items-center text-sm gap-4">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 truncate">#{payload.label}</span>
+                      <span className="font-bold text-slate-900 dark:text-white shrink-0">{payload.count} files</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-sky-500" style={{ width: `${share}%` }}></div>
+                    </div>
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Appears in {share}% of tagged files</div>
+                  </div>
+                );
+              })}
+            {Object.keys(analytics.aiTagStats).length === 0 && (
+              <div className="text-sm text-slate-500 dark:text-slate-400">No AI tags available.</div>
+            )}
           </div>
         </div>
       </div>
@@ -161,7 +237,7 @@ const Analytics = () => {
             {Object.entries(analytics.sizeByCategory).map(([category, size]) => (
               <div key={category} className="p-5 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-slate-900 rounded-lg border border-emerald-200 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-500 hover:shadow-md transition-all">
                 <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide mb-2">{category}</div>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatFileSize(size)}</div>
+                <div className="text-3xl font-bold text-slate-900 dark:text-white">{formatBytes(size)}</div>
                 <div className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">storage used</div>
               </div>
             ))}

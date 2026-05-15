@@ -106,6 +106,21 @@ const transferService = {
     }
   },
 
+  createSessionFromFile: async (payload = {}) => {
+    try {
+      const response = await api.post('/api/transfer/create-from-file', {
+        ...payload,
+        client_base_url: window.location.origin,
+      });
+      return response.data;
+    } catch (error) {
+      if (!error.response) {
+        return { success: false, error: 'Cannot reach backend API. Ensure backend is running and VITE_API_BASE_URL is correct.' };
+      }
+      return error.response.data || { success: false, error: 'Failed to create session from file' };
+    }
+  },
+
   getSession: async (sessionId) => {
     const response = await api.get(`/api/transfer/${sessionId}`);
     return response.data;

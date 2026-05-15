@@ -19,6 +19,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transfer")
+@CrossOrigin(origins = "http://localhost:5173", exposedHeaders = {
+    "Content-Disposition",
+    "Content-Type",
+    "Content-Length"
+})
 public class TransferController {
 
     @Autowired
@@ -40,6 +45,34 @@ public class TransferController {
                     : null;
 
             return ResponseEntity.ok(success(transferService.createSession(maxDownloads, expiryMinutes, clientBaseUrl, user.getId())));
+        } catch (TransferServiceException ex) {
+            return ResponseEntity.status(ex.getStatus()).body(error(ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/create-from-file")
+    public ResponseEntity<?> createFromFile(@RequestBody(required = false) Map<String, Object> request,
+                                            @AuthenticationPrincipal User user) {
+        try {
+            requireAuthenticatedUser(user);
+            String fileId = request != null && request.get("file_id") != null ? request.get("file_id").toString() : null;
+            Integer maxDownloads = request != null && request.get("max_downloads") != null
+                    ? toInteger(request.get("max_downloads"), "max_downloads")
+                    : null;
+            Integer expiryMinutes = request != null && request.get("expiry_minutes") != null
+                    ? toInteger(request.get("expiry_minutes"), "expiry_minutes")
+                    : null;
+            String clientBaseUrl = request != null && request.get("client_base_url") != null
+                    ? request.get("client_base_url").toString()
+                    : null;
+
+            return ResponseEntity.ok(success(transferService.createSessionFromExistingFile(
+                    fileId,
+                    maxDownloads,
+                    expiryMinutes,
+                    clientBaseUrl,
+                    user.getId()
+            )));
         } catch (TransferServiceException ex) {
             return ResponseEntity.status(ex.getStatus()).body(error(ex.getMessage()));
         }

@@ -1,11 +1,12 @@
 package com.cloudfileorganizer.backend.service;
 
 import com.cloudfileorganizer.backend.model.TransferPinAttempt;
+import com.cloudfileorganizer.backend.model.FileMetadata;
 import com.cloudfileorganizer.backend.model.TransferSession;
 import com.cloudfileorganizer.backend.model.TransferSessionStatus;
+import com.cloudfileorganizer.backend.repository.FileRepository;
 import com.cloudfileorganizer.backend.repository.TransferPinAttemptRepository;
 import com.cloudfileorganizer.backend.repository.TransferSessionRepository;
-import com.cloudfileorganizer.backend.service.AppSettingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,10 +48,10 @@ public class TransferService {
     private TransferSessionRepository transferSessionRepository;
 
     @Autowired
-    private TransferPinAttemptRepository transferPinAttemptRepository;
+    private FileRepository fileRepository;
 
     @Autowired
-    private AppSettingService appSettingService;
+    private TransferPinAttemptRepository transferPinAttemptRepository;
 
     @Autowired
     private S3Service s3Service;
@@ -98,10 +99,33 @@ public class TransferService {
     private String appBaseUrl;
 
     public Map<String, Object> createSession(Integer maxDownloads, Integer expiryMinutes, String clientBaseUrl, Long createdByUserId) {
-        int effectiveDefaultMaxDownloads = resolveDefaultMaxDownloads();
-        int effectiveDefaultExpiryMinutes = resolveDefaultExpiryMinutes();
-        int safeMaxDownloads = (maxDownloads == null) ? effectiveDefaultMaxDownloads : maxDownloads;
-        int safeExpiryMinutes = (expiryMinutes == null) ? effectiveDefaultExpiryMinutes : expiryMinutes;
+        return createSessionInternal(maxDownloads, expiryMinutes, clientBaseUrl, createdByUserId, null, null, null);
+    }
+
+    public Map<String, Object> createSessionFromExistingFile(String fileId, Integer maxDownloads, Integer expiryMinutes, String clientBaseUrl, Long createdByUserId) {
+        if (fileId == null || fileId.isBlank()) {
+            throw new TransferServiceException(HttpStatus.BAD_REQUEST, "file_id is required");
+        }
+
+        FileMetadata file = fileRepository.findById(fileId)
+            .filter(existing -> existing.getUser() != null && Objects.equals(existing.getUser().getId(), createdByUserId))
+            .orElseThrow(() -> new TransferServiceException(HttpStatus.NOT_FOUND, "File not found"));
+
+        return createSessionInternal(
+                maxDownloads,
+                expiryMinutes,
+                clientBaseUrl,
+                createdByUserId,
+                file.getS3Key(),
+                file.getOriginalName() != null ? file.getOriginalName() : file.getName(),
+                file.getId()
+        );
+    }
+
+    private Map<String, Object> createSessionInternal(Integer maxDownloads, Integer expiryMinutes, String clientBaseUrl, Long createdByUserId,
+                                                      String fileKey, String originalFileName, String sourceFileId) {
+        int safeMaxDownloads = (maxDownloads == null) ? defaultMaxDownloads : maxDownloads;
+        int safeExpiryMinutes = (expiryMinutes == null) ? defaultExpiryMinutes : expiryMinutes;
 
         if (safeMaxDownloads < 1 || safeMaxDownloads > MAX_ALLOWED_DOWNLOADS) {
             throw new TransferServiceException(HttpStatus.BAD_REQUEST, "max_downloads must be between 1 and 10");
@@ -121,7 +145,10 @@ public class TransferService {
         session.setExpiresAt(LocalDateTime.now().plusMinutes(safeExpiryMinutes));
         session.setMaxDownloads(safeMaxDownloads);
         session.setDownloadsCount(0);
-        session.setStatus(TransferSessionStatus.PENDING);
+        session.setFileKey(fileKey);
+        session.setOriginalFileName(originalFileName);
+        session.setSourceFileId(sourceFileId);
+        session.setStatus(fileKey == null ? TransferSessionStatus.PENDING : TransferSessionStatus.UPLOADED);
         session.setCreatedAt(LocalDateTime.now());
         session.setUpdatedAt(LocalDateTime.now());
 
@@ -133,8 +160,15 @@ public class TransferService {
         data.put("expires_at", session.getExpiresAt());
         data.put("auto_delete_at", session.getExpiresAt());
         data.put("max_downloads", safeMaxDownloads);
+        data.put("source_file_id", sourceFileId);
+        data.put("source_file_name", originalFileName);
+        data.put("transfer_mode", sourceFileId == null ? "upload" : "existing_file");
         String transferBase = resolveTransferBaseUrl(clientBaseUrl);
         data.put("transfer_url", transferBase + "/transfer/" + sessionId);
+        if (fileKey != null && !fileKey.isBlank()) {
+            // Provide QR code immediately for sessions that already reference an existing file
+            data.put("qr_code", generateQrCodeDataUrl(transferBase + "/transfer/" + sessionId));
+        }
         return data;
     }
 
@@ -156,6 +190,8 @@ public class TransferService {
             item.put("downloads_count", session.getDownloadsCount());
             item.put("max_downloads", session.getMaxDownloads());
             item.put("transfer_url", transferBase + "/transfer/" + session.getSessionId());
+            item.put("source_file_id", session.getSourceFileId());
+            item.put("transfer_mode", session.getSourceFileId() == null ? "upload" : "existing_file");
                 item.put("pin", (session.getEncryptedPin() == null || session.getEncryptedPin().isBlank())
                     ? "Unavailable"
                     : decryptPin(session.getEncryptedPin()));
@@ -188,6 +224,8 @@ public class TransferService {
         data.put("downloads_count", session.getDownloadsCount());
         data.put("has_file", session.getFileKey() != null && !session.getFileKey().isBlank());
         data.put("file_name", session.getOriginalFileName());
+        data.put("source_file_id", session.getSourceFileId());
+        data.put("transfer_mode", session.getSourceFileId() == null ? "upload" : "existing_file");
         data.put("created_at", session.getCreatedAt());
         return data;
     }
@@ -200,9 +238,8 @@ public class TransferService {
         if (fileSize == null || fileSize <= 0) {
             throw new TransferServiceException(HttpStatus.BAD_REQUEST, "file_size must be greater than 0");
         }
-        long effectiveMaxFileSizeBytes = resolveTransferMaxFileSizeBytes();
-        if (fileSize > effectiveMaxFileSizeBytes) {
-            throw new TransferServiceException(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds transfer limit");
+        if (fileSize > maxFileSizeBytes) {
+            throw new TransferServiceException(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds 50MB limit");
         }
 
         TransferSession session = transferSessionRepository.findBySessionId(sessionId)
@@ -474,10 +511,6 @@ public class TransferService {
         return endSession(sessionId, requesterUserId, false);
     }
 
-    public Map<String, Object> endSessionAsAdmin(String sessionId) {
-        return endSession(sessionId, null, true);
-    }
-
     @Transactional
     public Map<String, Object> endSession(String sessionId, Long requesterUserId, boolean isAdmin) {
         validateSessionId(sessionId);
@@ -496,7 +529,7 @@ public class TransferService {
             return data;
         }
 
-        if (session.getFileKey() != null && !session.getFileKey().isBlank()) {
+        if (session.getSourceFileId() == null && session.getFileKey() != null && !session.getFileKey().isBlank()) {
             try {
                 s3Service.deleteFile(session.getFileKey());
             } catch (Exception ex) {
@@ -531,6 +564,8 @@ public class TransferService {
             item.put("max_downloads", session.getMaxDownloads());
             item.put("transfer_url", transferBase + "/transfer/" + session.getSessionId());
             item.put("file_name", session.getOriginalFileName());
+            item.put("source_file_id", session.getSourceFileId());
+            item.put("transfer_mode", session.getSourceFileId() == null ? "upload" : "existing_file");
             item.put("created_by_user_id", session.getCreatedByUserId());
             items.add(item);
         }
@@ -553,7 +588,7 @@ public class TransferService {
         int failedCount = 0;
 
         for (TransferSession session : expired) {
-            if (session.getFileKey() != null && !session.getFileKey().isBlank()) {
+            if (session.getSourceFileId() == null && session.getFileKey() != null && !session.getFileKey().isBlank()) {
                 try {
                     s3Service.deleteFile(session.getFileKey());
                     logger.debug("Successfully deleted S3 object for session {}: {}", session.getId(), session.getFileKey());
@@ -619,21 +654,6 @@ public class TransferService {
 
     private boolean isExpired(TransferSession session) {
         return session.getExpiresAt() == null || session.getExpiresAt().isBefore(LocalDateTime.now());
-    }
-
-    private int resolveDefaultExpiryMinutes() {
-        Integer stored = appSettingService.getInt(AppSettingService.KEY_TRANSFER_DEFAULT_EXPIRY_MINUTES, defaultExpiryMinutes);
-        return stored == null ? defaultExpiryMinutes : stored;
-    }
-
-    private int resolveDefaultMaxDownloads() {
-        Integer stored = appSettingService.getInt(AppSettingService.KEY_TRANSFER_DEFAULT_MAX_DOWNLOADS, defaultMaxDownloads);
-        return stored == null ? defaultMaxDownloads : stored;
-    }
-
-    private long resolveTransferMaxFileSizeBytes() {
-        Long stored = appSettingService.getLong(AppSettingService.KEY_TRANSFER_MAX_FILE_SIZE_BYTES, maxFileSizeBytes);
-        return stored == null ? maxFileSizeBytes : stored;
     }
 
     private void expireSession(TransferSession session) {

@@ -23,6 +23,9 @@ public class TransferSession {
     @Column(name = "file_key", length = 1024)
     private String fileKey;
 
+    @Column(name = "source_file_id", length = 64)
+    private String sourceFileId;
+
     @Column(name = "original_file_name", length = 255)
     private String originalFileName;
 
@@ -93,6 +96,14 @@ public class TransferSession {
 
     public void setFileKey(String fileKey) {
         this.fileKey = fileKey;
+    }
+
+    public String getSourceFileId() {
+        return sourceFileId;
+    }
+
+    public void setSourceFileId(String sourceFileId) {
+        this.sourceFileId = sourceFileId;
     }
 
     public String getOriginalFileName() {
